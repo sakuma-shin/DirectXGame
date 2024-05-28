@@ -8,24 +8,26 @@
 #include<dxgidebug.h>
 #include<dxcapi.h>
 #include"Vector4.h"
+#include"ExMath.h"
 
 #include"externals/imgui/imgui.h"
 #include"externals/imgui/imgui_impl_dx12.h"
 #include"externals/imgui/imgui_impl_win32.h"
-extern IMGUI_IMPL_API LRESULT ImGui_Implwin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam,LPARAM lParam);
+
 #pragma comment(lib,"dxguid.lib")
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
 #pragma comment(lib,"dxcompiler")
 
 
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 
 //ウインドウプロシーシャ
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg,
 	WPARAM wparam, LPARAM lparam) {
 
-	if (ImGui_Implwin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
+	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
 		return true;
 	}
 	//メッセージに応じてゲーム固有の処理を行う
@@ -184,6 +186,7 @@ ID3D12DescriptorHeap* CreateDescriptorHeap(
 	assert(SUCCEEDED(hr));
 	return descriptorHeap;
 }
+
 
 //Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -420,10 +423,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
 	//Rootparameter作成。 複数設定できるので配列。 今回は結果1つだけなので長さ1の配列
-	D3D12_ROOT_PARAMETER rootParameters[1] = {};
+	D3D12_ROOT_PARAMETER rootParameters[2] = {};
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; //CBVを使う
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; //PixelShaderを使う
 	rootParameters[0].Descriptor.ShaderRegister = 0;					//レジスタ番号0とバインド
+	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; //CBVを使う
+	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX; //PixelShaderを使う
+	rootParameters[1].Descriptor.ShaderRegister = 0;					//レジスタ番号0とバインド
 	descriptionRootSignature.pParameters = rootParameters;	//ルートパラメータ配列へのポインタ
 	descriptionRootSignature.NumParameters = _countof(rootParameters);	//配列の長さ
 
@@ -509,6 +515,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	ID3D12Resource* materialResource = CreateBufferResource(device, sizeof(Vector4));
 
+	//wvp用のリソースを作る。Matarix4x41つ分にする
+	ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(Matrix4x4));
+
+	//データを書き込む
+	Matrix4x4* wvpData = nullptr;
+
+	//書き込むためのアドレスを取得
+	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
+
+	//単位行列を書き込んでおく
+	*wvpData = MakeIdentity4x4();
+
 	//マテリアルにデータを読み込む
 	Vector4* materialData = nullptr;
 	//書き込むためのアドレスを取得
@@ -582,8 +600,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui_ImplDX12_NewFrame();
 			ImGui_ImplWin32_NewFrame();
 			ImGui::NewFrame();
-			//開発用UIの処理。実際に開発用のUを出す場合はここをゲーム用の処理に置き換える
-			ImGui::ShowDemoWindow();
+			//開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム用の処理に置き換える
+			//ImGui::ShowDemoWindow();////////
+
+			ImGui::Begin("Window");
+			ImGui::DragFloat3("color", &materialData->x, 0.01f);
+			ImGui::End();
 
 
 			//これから書き込むバックバッファのインデックスを取得
@@ -603,10 +625,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 			// TransitionBarrierを張る
 			commandList->ResourceBarrier(1, &barrier);
-
-			//ImGuiの内部コマンドを生成する
-			ImGui::Render();
-
+			//Imguiの色変えるのにはここに
+			
+		
 			//描画先のRTVを設定する
 			commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, nullptr);
 			//指定した色で画面全体をクリアする
@@ -615,7 +636,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			//描画用のDescriptorHeapの設定
 			ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap };
-			commandList->SetDescriptorHeaps(1, descriptorHeaps);
+			commandList->SetDescriptorHeaps(1, descriptorHeaps);//////////////////
 
 			commandList->RSSetViewports(1, &viewport); //viewportを設定
 			commandList->RSSetScissorRects(1, &scissorRect);//Scissorを設定
@@ -627,12 +648,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			//マテリアルCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-		
+			//wvp用のCBufferの場所を設定
+			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+			
+			//ImGuiの内部コマンドを生成する
+			ImGui::Render();///////////
 			//描画
 			commandList->DrawInstanced(3, 1, 0, 0);
 
 			//実際のcomandListのImGuiの描画コマンドを挟む
-			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
+			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);//////////
 
 			// 画面に描く処理はすべて終わり、画面に映すので、状態を遷移
 			//今回はRenderTargetからPresentにする
@@ -651,10 +676,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			//GPUとOSに画面の交換を行うよう通知する
 			swapChain->Present(1, 0);
-
-
-
-
 
 			//Fenceの値を更新
 			fenceValue++;
