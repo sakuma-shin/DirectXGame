@@ -22,6 +22,11 @@
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+struct Transform {
+	Vector3 scale;
+	Vector3 rotate;
+	Vector3 translate;
+};
 
 //ウインドウプロシーシャ
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg,
@@ -157,7 +162,7 @@ ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizeinBytes) {
 	D3D12_RESOURCE_DESC vertexResourceDesc{};
 	// バッファリソース。テクスチャの場合はまた別の設定をする
 	vertexResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	vertexResourceDesc.Width = sizeof(Vector4) * 3; // リソースのサイズ。今回はVector4を3頂点分
+	vertexResourceDesc.Width = sizeinBytes; // リソースのサイズ。今回はVector4を3頂点分
 	// バッファの場合はこれらは1にする決まり
 	vertexResourceDesc.Height = 1;
 	vertexResourceDesc.DepthOrArraySize = 1;
