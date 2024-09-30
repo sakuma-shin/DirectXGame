@@ -1,4 +1,3 @@
-#include"Vector4.h"
 #include"Object3d.hlsli"
 
 struct Material
