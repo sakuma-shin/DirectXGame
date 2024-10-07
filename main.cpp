@@ -803,6 +803,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//全ての色要素を書き込む
 	blendDesc.RenderTarget[0].RenderTargetWriteMask =
 		D3D12_COLOR_WRITE_ENABLE_ALL;
+	blendDesc.RenderTarget[0].BlendEnable = TRUE;
+	blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
 
 	//RasiterzerStateの設定
 	D3D12_RASTERIZER_DESC rasterizerDesc{};
@@ -982,9 +989,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	indexDataSprite[3] = 1;	indexDataSprite[4] = 3;	indexDataSprite[5] = 2;
 
 
-
-
-
 	//ビューポート
 	D3D12_VIEWPORT viewport{};
 	//クライアント領域のサイズと一緒にして画面全体に表示
@@ -1051,8 +1055,28 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// SRVの生成
 	device->CreateShaderResourceView(textureResource, &srvDesc, textureSrvHandleCPU);
 
+	float pi = static_cast<float>(M_PI);
+	const uint32_t kSubdivision = 16;//分割数
+	float pi = float(M_PI);			
+	const float kLonEvery = 2.0f * pi / kSubdivision;	//経度分割一つ分の角度
+	const float kLatEvery = pi / kSubdivision;	//緯度分割一つ分の角度
+	
 
+	for (uint32_t latIndex = 0;latIndex < kSubdivision;++latIndex) {
+		float lat = -pi / 2.0f + kLatEvery * latIndex;
+		//経度の方に分割0~2π
+		for (uint32_t lonIndex = 0;lonIndex < kSubdivision;++lonIndex) {
+			float lon = lonIndex * kLonEvery;//現在の経度
+			uint32_t startIndex = (latIndex * kSubdivision + lonIndex) * 6;
+			//頂点にデータを入力する
+			vertexData[startIndex].position.x = cos(lat) * cos(lon);
+			vertexData[startIndex].position.y = sin(lat);
+			vertexData[startIndex].position.z = cos(lat) * sin(lon);
+			vertexData[startIndex].position.w = 1.0f;
+			vertexData[startIndex].texcoord = {0.0f,1.0f};
 
+		}
+	}
 	MSG msg{};
 	//ウインドウの×ボタンが押されるまでループ
 	while (msg.message != WM_QUIT) {
@@ -1070,13 +1094,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//ImGui::ShowDemoWindow();
 
 			ImGui::Begin("Window");
-			ImGui::DragFloat3("color", &materialData->x, 0.01f);
+			/*ImGui::DragFloat3("color", &materialData->x, 0.01f);*/
 			ImGui::DragFloat3("modelScale", &transform.scale.x, 0.01f);
 			ImGui::DragFloat3("modelRotate", &transform.rotate.x, 0.01f);
 			ImGui::DragFloat3("modelTranslate", &transform.translate.x, 0.01f);
 			ImGui::DragFloat3("spriteTranslate", &transformSprite.translate.x, 0.01f);
 			ImGui::DragFloat3("spriteScale", &transformSprite.scale.x, 0.01f);
 			ImGui::DragFloat3("spriteRotate", &transformSprite.rotate.x, 0.01f);
+			ImGui::ColorEdit4("color", &materialData->x,0.01f);
 			ImGui::End();
 
 			/*transform.rotate.y += 0.03f;*/
