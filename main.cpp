@@ -1096,6 +1096,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				OutputDebugStringA("Hit 0\n"); //出力ウインドウに表示
 			}
 
+
+
 			//ゲームの処理
 			// 
 			ImGui_ImplDX12_NewFrame();
