@@ -13,15 +13,14 @@
 #include"Vector4.h"
 #include"ExMath.h"
 #include"externals/DirectXTex/DirectXTex.h"
+#include"Input.h"
 
 #include"externals/imgui/imgui.h"
 #include"externals/imgui/imgui_impl_dx12.h"
 #include"externals/imgui/imgui_impl_win32.h"
-#define DIRECTINPUT_VERSION 0x0800
-#include<dinput.h>
 
-#pragma comment(lib,"dinput8.lib")
-#pragma comment(lib,"dxguid.lib")
+
+
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
 #pragma comment(lib,"dxcompiler")
@@ -869,24 +868,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		IID_PPV_ARGS(&graphicsPipelineState));
 	assert(SUCCEEDED(hr));
 
-	//DirectInputの初期化
-	IDirectInput8* directInput = nullptr;
-	HRESULT result = DirectInput8Create(
-		wc.hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8,
-		(void**)&directInput, nullptr);
+	//ポインタ　
+	Input* input = nullptr;
 
-	assert(SUCCEEDED(result));
-	IDirectInputDevice8* keyboard = nullptr;
-	result = directInput->CreateDevice(GUID_SysKeyboard, &keyboard, NULL);
-	assert(SUCCEEDED(result));
-
-	//入力データ形式のセット
-	result = keyboard->SetDataFormat(&c_dfDIKeyboard); //標準形式
-	assert(SUCCEEDED(result));
-
-	result = keyboard->SetCooperativeLevel(
-		hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
-	assert(SUCCEEDED(result));
+	//入力の初期化
+	input = new Input();
+	input->Initialize(wc.hInstance,hwnd);
 
 	//モデル読み込み
 	ModelData modelData = LoadObjFile("resources", "plane.obj");
@@ -1275,6 +1262,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	debugController->Release();
 #endif
 	CloseWindow(hwnd);
+
+	//入力関数
+	delete input;
 
 
 	// リソースリークチェック
