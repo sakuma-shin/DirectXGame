@@ -12,12 +12,29 @@ public:
 	template<class T>using Comptr = Microsoft::WRL::ComPtr<T>;
 
 	//初期化
-	void Initialize(HINSTANCE hInstance,HWND hwnd);
+	void Initialize(HINSTANCE hInstance, HWND hwnd);
 
 	//更新
 	void Update();
 
+	/// <summary>
+	/// キーのトリガーをチェック
+	/// </summary>
+	/// <param name="keyNumber">キー番号(DIK_0等)</param>
+	/// <returns>トリガーか</returns>
+	bool TriggerKey(BYTE keyNumber);
+
+	bool PushKey(BYTE keyNumber);
+
 private:
 	ComPtr<IDirectInputDevice8> keyboard = nullptr;
+
+	//全キーの入力状態を取得する
+	BYTE key[256] = {};
+	//前回のキーの状態
+	BYTE keyPre[256] = {};
+
+	//DirectInputのインスタンス
+	ComPtr<IDirectInput8> directInput = nullptr;
 };
 

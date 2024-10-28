@@ -1071,12 +1071,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			DispatchMessage(&msg);
 		} else {
 
-			input->Update();
-
-			//数字のキーが押されていたら
-			//if (key[DIK_0]) {
-			//	OutputDebugStringA("Hit 0\n"); //出力ウインドウに表示
-			//}
+			
 
 
 
@@ -1097,6 +1092,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::DragFloat3("spriteScale", &transformSprite.scale.x, 0.01f);
 			ImGui::DragFloat3("spriteRotate", &transformSprite.rotate.x, 0.01f);
 			ImGui::End();
+
+			input->Update();
+
+			//数字のキーが押されていたら
+			if (input->TriggerKey(DIK_0)) {
+				OutputDebugStringA("Hit 0\n"); //出力ウインドウに表示
+			}
 
 			/*transform.rotate.y += 0.03f;*/
 			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
