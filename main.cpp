@@ -22,8 +22,6 @@
 #pragma comment(lib,"dxcompiler")
 
 
-const int kWindowWidth = 1280;
-const int kWindowHeight = 720;
 
 struct Transform {
 	Vector3 scale;
@@ -475,7 +473,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	}
 #endif
 
-	
+	//ポインタ　
+	WinApp* winApp = nullptr;
+
+	//WindowsAPIの初期化
+	winApp = new WinApp();
+	winApp->Initialize();
+
+	//ポインタ　
+	Input* input = nullptr;
+
+	//入力の初期化
+	input = new Input();
+	input->Initialize(winApp->GetHinstance(), winApp->GetHwnd());
+
 
 	//出力ウインドウへの文字出力
 	OutputDebugStringA("Hello,DirectX!\n");
@@ -592,14 +603,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	IDXGISwapChain4* swapChain = nullptr;
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
 	swapChainDesc.Width = WinApp::kCilentWidth;		//画面の幅。ウインドウのクライアント領域を同じものにしておく
-	swapChainDesc.Height = kCilentHeight;	//画面の高さ。ウインドウのクライアント領域を同じものにしておく
+	swapChainDesc.Height = WinApp::kCilentHeight;	//画面の高さ。ウインドウのクライアント領域を同じものにしておく
 	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;//色の形式
 	swapChainDesc.SampleDesc.Count = 1;	//マルチサンプルしない
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	swapChainDesc.BufferCount = 2;//ダブルバッファ
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;//モニタにうつしたら、中身を破棄
 	//コマンドキュー、ウインドウハンドル、設定を渡して生成する
-	hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue, hwnd, &swapChainDesc, nullptr, nullptr, reinterpret_cast<IDXGISwapChain1**>(&swapChain));
+	hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue, winApp->GetHwnd(), &swapChainDesc, nullptr, nullptr, reinterpret_cast<IDXGISwapChain1**>(&swapChain));
 	assert(SUCCEEDED(hr));
 
 	//ディスクリプタヒープの生成
@@ -801,13 +812,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		IID_PPV_ARGS(&graphicsPipelineState));
 	assert(SUCCEEDED(hr));
 
-	//ポインタ　
-	Input* input = nullptr;
-
-	//入力の初期化
-	input = new Input();
-	input->Initialize(wc.hInstance,hwnd);
-
+	
 	//モデル読み込み
 	ModelData modelData = LoadObjFile("resources", "plane.obj");
 	//頂点リソースを作る
@@ -815,7 +820,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * modelData.vertices.size());
 
 	ID3D12Resource* materialResource = CreateBufferResource(device, sizeof(Vector4));
-	ID3D12Resource* depthStencilResource = CreateDepthStencilTextureResource(device, kCilentWidth, kCilentHeight);
+	ID3D12Resource* depthStencilResource = CreateDepthStencilTextureResource(device, WinApp::kCilentWidth, WinApp::kCilentHeight);
 
 	ID3D12Resource* vertexResourceSprite = CreateBufferResource(device, sizeof(VertexData) * 6);
 
@@ -930,8 +935,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//ビューポート
 	D3D12_VIEWPORT viewport{};
 	//クライアント領域のサイズと一緒にして画面全体に表示
-	viewport.Width = kCilentWidth;
-	viewport.Height = kCilentHeight;
+	viewport.Width = WinApp::kCilentWidth;
+	viewport.Height = WinApp::kCilentHeight;
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
 	viewport.MinDepth = 0.0f;
@@ -941,9 +946,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	D3D12_RECT scissorRect{};
 	//きほんてきにビューポートと同じ矩形が構成されるようにする
 	scissorRect.left = 0;
-	scissorRect.right = kCilentWidth;
+	scissorRect.right = WinApp::kCilentWidth;
 	scissorRect.top = 0;
-	scissorRect.bottom = kCilentHeight;
+	scissorRect.bottom = WinApp::kCilentHeight;
 
 	//ImGuiの初期化。
 	IMGUI_CHECKVERSION();
@@ -1004,12 +1009,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			DispatchMessage(&msg);
 		} else {
 
-			//ポインタ　
-			WinApp* winApp = nullptr;
-
-			//WindowsAPIの初期化
-			winApp =new WinApp();
-			winApp->Initialize();
+			
 
 
 
@@ -1050,7 +1050,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//sprite用のworldViewProjectionMatrixを作る
 			Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
 			Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
-			Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(kCilentWidth), float(kCilentHeight), 0.0f, 100.0f);
+			Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(WinApp::kCilentWidth), float(WinApp::
+				WinApp::kCilentHeight), 0.0f, 100.0f);
 			//WVPMatrixを作る
 			Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
 

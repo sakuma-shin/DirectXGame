@@ -22,5 +22,18 @@ public:
 	void Initialize();
 	//更新
 	void Update();
+
+	//クライアント領域のサイズ
+	static const int32_t kCilentWidth = 1280;
+	static const int32_t kCilentHeight = 720;
+
+	HWND GetHwnd()const { return hwnd; }
+	HINSTANCE GetHinstance()const { return wc.hInstance; }
+
+private:
+	//ウインドウハンドル
+	HWND hwnd = nullptr;
+
+	WNDCLASS wc{};
 };
 

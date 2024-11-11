@@ -36,9 +36,7 @@ void WinApp::Initialize()
 	//ウインドウクラスを登録する
 	RegisterClass(&wc);
 
-	//クライアント領域のサイズ
-	const int32_t kCilentWidth = 1280;
-	const int32_t kCilentHeight = 720;
+
 	//ウインドウサイズを表す構造体にクライアント領域を入れる
 	RECT wrc = { 0,0,kCilentWidth,kCilentHeight };
 
