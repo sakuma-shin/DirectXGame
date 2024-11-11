@@ -1,4 +1,4 @@
-#include<Windows.h>
+
 #include<cstdint>
 #include<string>
 #include<format>
@@ -14,6 +14,7 @@
 #include"ExMath.h"
 #include"externals/DirectXTex/DirectXTex.h"
 #include"Input.h"
+#include"WinApp.h"
 
 #include"externals/imgui/imgui.h"
 #include"externals/imgui/imgui_impl_dx12.h"
@@ -57,20 +58,7 @@ struct ModelData {
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg,
 	WPARAM wparam, LPARAM lparam) {
 
-	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
-		return true;
-	}
-	//メッセージに応じてゲーム固有の処理を行う
-	switch (msg) {
-		//ウインドウが破棄された
-	case WM_DESTROY:
-		//OSに対して、アプリの終了を伝える
-		PostQuitMessage(0);
-		return 0;
-	}
-
-	//標準のメッセージ処理を行う
-	return DefWindowProc(hwnd, msg, wparam, lparam);
+	
 
 
 }
@@ -490,31 +478,9 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 //Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
-	CoInitializeEx(0, COINIT_MULTITHREADED);
+	
 
-	WNDCLASS wc{};
-
-
-	//ウインドウプロシージャ
-	wc.lpfnWndProc = WindowProc;
-	//ウインドウクラス名
-	wc.lpszClassName = L"CG2WindowClass";
-	//インスタンスハンドル
-	wc.hInstance = GetModuleHandle(nullptr);
-	//カーソル
-	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-
-	//ウインドウクラスを登録する
-	RegisterClass(&wc);
-
-	//クライアント領域のサイズ
-	const int32_t kCilentWidth = 1280;
-	const int32_t kCilentHeight = 720;
-	//ウインドウサイズを表す構造体にクライアント領域を入れる
-	RECT wrc = { 0,0,kCilentWidth,kCilentHeight };
-
-	//クライアント領域を元に実際のサイズにwrcを変更してもらう
-	AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
+	
 
 #ifdef _DEBUG
 	ID3D12Debug1* debugController = nullptr;
@@ -526,23 +492,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	}
 #endif
 
-	//ウインドウの生成
-	HWND hwnd = CreateWindow(
-		wc.lpszClassName,		//利用するクラス名
-		L"CG2",					//タイトルバーの文字
-		WS_OVERLAPPEDWINDOW,		//よく見るウインドウスタイル
-		CW_USEDEFAULT,			//表示X座標(Windowsに任せる)
-		CW_USEDEFAULT,			//表示Y座標(WindowsOSに任せる)
-		wrc.right - wrc.left,	//ウインドウ横幅
-		wrc.bottom - wrc.top,	//ウインドウ縦幅
-		nullptr,				//親ウインドウハンドル
-		nullptr,				//メニューハンドル
-		wc.hInstance,			//インスタンスハンドル
-		nullptr);				//オプション
-
-
-	//ウインドウを表示する
-	ShowWindow(hwnd, SW_SHOW);
+	
 
 	//出力ウインドウへの文字出力
 	OutputDebugStringA("Hello,DirectX!\n");
@@ -658,7 +608,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//スワップチェーンを生成する
 	IDXGISwapChain4* swapChain = nullptr;
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
-	swapChainDesc.Width = kCilentWidth;		//画面の幅。ウインドウのクライアント領域を同じものにしておく
+	swapChainDesc.Width = WinApp::kCilentWidth;		//画面の幅。ウインドウのクライアント領域を同じものにしておく
 	swapChainDesc.Height = kCilentHeight;	//画面の高さ。ウインドウのクライアント領域を同じものにしておく
 	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;//色の形式
 	swapChainDesc.SampleDesc.Count = 1;	//マルチサンプルしない
@@ -1071,7 +1021,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			DispatchMessage(&msg);
 		} else {
 
-			
+			//ポインタ　
+			WinApp* winApp = nullptr;
+
+			//WindowsAPIの初期化
+			winApp =new WinApp();
+			winApp->Initialize();
 
 
 
@@ -1262,6 +1217,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//入力関数
 	delete input;
+	delete winApp;
 
 
 	// リソースリークチェック
