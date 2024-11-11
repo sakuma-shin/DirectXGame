@@ -1,4 +1,3 @@
-
 #include<cstdint>
 #include<string>
 #include<format>
@@ -16,18 +15,12 @@
 #include"Input.h"
 #include"WinApp.h"
 
-#include"externals/imgui/imgui.h"
-#include"externals/imgui/imgui_impl_dx12.h"
-#include"externals/imgui/imgui_impl_win32.h"
-
 
 
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
 #pragma comment(lib,"dxcompiler")
 
-
-extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 const int kWindowWidth = 1280;
 const int kWindowHeight = 720;
@@ -52,16 +45,6 @@ struct ModelData {
 	std::vector<VertexData> vertices;
 	MaterialData material;
 };
-
-
-//ウインドウプロシーシャ
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg,
-	WPARAM wparam, LPARAM lparam) {
-
-	
-
-
-}
 
 std::wstring ConvertString(const std::string& str) {
 	if (str.empty()) {
