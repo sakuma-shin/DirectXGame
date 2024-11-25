@@ -3,7 +3,6 @@
 #include<dinput.h>
 #include<wrl.h>
 #define DIRECTINPUT_VERSION 0x0800
-using namespace Microsoft::WRL;
 
 class Input
 {
@@ -18,6 +17,6 @@ public:
 	void Update();
 
 private:
-	ComPtr<IDirectInputDevice8> keyboard = nullptr;
+	Microsoft::WRL::ComPtr<IDirectInputDevice8> keyboard = nullptr;
 };
 
