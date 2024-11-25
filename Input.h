@@ -2,6 +2,7 @@
 #include<Windows.h>
 #include<dinput.h>
 #include<wrl.h>
+#include"WinApp.h"
 #define DIRECTINPUT_VERSION 0x0800
 using namespace Microsoft::WRL;
 
@@ -12,10 +13,12 @@ public:
 	template<class T>using Comptr = Microsoft::WRL::ComPtr<T>;
 
 	//初期化
-	void Initialize(HINSTANCE hInstance, HWND hwnd);
+	void Initialize(WinApp* winApp);
 
 	//更新
 	void Update();
+
+	
 
 	/// <summary>
 	/// キーのトリガーをチェック
@@ -36,5 +39,7 @@ private:
 
 	//DirectInputのインスタンス
 	ComPtr<IDirectInput8> directInput = nullptr;
+
+	WinApp* winApp_ = nullptr;
 };
 

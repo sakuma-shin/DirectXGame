@@ -30,6 +30,9 @@ public:
 	HWND GetHwnd()const { return hwnd; }
 	HINSTANCE GetHinstance()const { return wc.hInstance; }
 
+	//終了
+	void Finalize();
+
 private:
 	//ウインドウハンドル
 	HWND hwnd = nullptr;

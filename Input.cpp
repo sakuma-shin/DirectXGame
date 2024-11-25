@@ -5,24 +5,26 @@
 
 
 
-void Input::Initialize(HINSTANCE hInstance, HWND hwnd)
+void Input::Initialize(WinApp* winApp)
 {
+	//借りてきたwinAppのインスタンスを記録
+	winApp_ = winApp;
 
 	HRESULT result = DirectInput8Create(
-		hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8,
+		winApp->GetHinstance(), DIRECTINPUT_VERSION, IID_IDirectInput8,
 		(void**)&directInput, nullptr);
 
-	assert(SUCCEEDED(result));
+	
 	
 	result = directInput->CreateDevice(GUID_SysKeyboard, &keyboard, NULL);
-	assert(SUCCEEDED(result));
+	
 
 	//入力データ形式のセット
 	result = keyboard->SetDataFormat(&c_dfDIKeyboard); //標準形式
-	assert(SUCCEEDED(result));
+	
 
 	result = keyboard->SetCooperativeLevel(
-		hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
+		winApp->GetHwnd(), DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
 	assert(SUCCEEDED(result));
 }
 
@@ -36,6 +38,7 @@ void Input::Update()
 	
 	keyboard->GetDeviceState(sizeof(key), key);
 }
+
 
 bool Input::TriggerKey(BYTE keyNumber)
 {
