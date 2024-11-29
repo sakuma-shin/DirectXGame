@@ -14,6 +14,7 @@
 #include"ExMath.h"
 #include"externals/DirectXTex/DirectXTex.h"
 #include"wrl.h"
+#include <random>
 
 #include"externals/imgui/imgui.h"
 #include"externals/imgui/imgui_impl_dx12.h"
@@ -58,6 +59,11 @@ struct TransformationMatrix
 	Matrix4x4 WVP;
 
 	Matrix4x4 World;
+};
+
+struct Particle {
+	Transform transform;
+	Vector3 velocity;
 };
 
 //ウインドウプロシーシャ
@@ -1044,12 +1050,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	indexDataSprite[0] = 0;  indexDataSprite[1] = 1;  indexDataSprite[2] = 2;
 	indexDataSprite[3] = 1;	indexDataSprite[4] = 3;	indexDataSprite[5] = 2;
 
-	Transform transforms[kNumInstance];
+	Particle particles[kNumInstance];
 	for (uint32_t index = 0;index < kNumInstance;++index) {
-		transforms[index].scale = { 1.0f,1.0f,1.0f };
-		transforms[index].rotate = { 0.0f,3.14f,0.0f };
-		transforms[index].translate = { index * 0.1f,index * 0.1f,index * 0.1f };
+		particles[index].transform.scale = { 1.0f,1.0f,1.0f };
+		particles[index].transform.rotate = { 0.0f,3.14f,0.0f };
+		particles[index].transform.translate = { index * 0.1f,index * 0.1f,index * 0.1f };
+		particles[index].velocity = { 0.0f,1.0f,0.0f };
 	}
+
+	const float kDeltaTime = 1.0f / 60.0f;
 
 	//ビューポート
 	D3D12_VIEWPORT viewport{};
@@ -1173,13 +1182,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			*transformationMatrixDataSprite = worldViewProjectionMatrixSprite;
 
 			for (uint32_t index = 0;index < kNumInstance;++index) {
-				Matrix4x4 worldMatrix = MakeAffineMatrix(transforms[index].scale, transforms[index].rotate, transforms[index].translate);
+				Matrix4x4 worldMatrix = MakeAffineMatrix(particles[index].transform.scale, particles[index].transform.rotate, particles[index].transform.translate);
 				Matrix4x4 viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
-
-
 				Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, viewProjectionMatrix);
 				instancingData[index].WVP = worldViewProjectionMatrix;
 				instancingData[index].World = worldMatrix;
+
+				particles[index].transform.translate += particles[index].velocity * kDeltaTime;
 			}
 			//これから書き込むバックバッファのインデックスを取得
 			UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
