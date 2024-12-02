@@ -7,6 +7,10 @@
 #include"externals/imgui/imgui_impl_win32.h"
 #include"WinApp.h"
 #include"Logger.h"
+#include"array"
+#include<cassert>
+#include <format>
+#include <dxcapi.h>
 
 
 
@@ -27,7 +31,7 @@ public:
 
 	void RTVInitialize();
 
-	void ZStencilViewInitialize();
+	void DepthStencilViewInitialize();
 
 	void FenceCreate();
 
@@ -40,6 +44,19 @@ public:
 	void ImGuiInitilalize();
 
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
+
+	static D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index);
+
+	static D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index);
+
+	/// <summary>
+	/// SRVの指定番号のCPUデスクリプタハンドルを取得する
+	/// </summary>
+	D3D12_CPU_DESCRIPTOR_HANDLE GetSRVCPUDescriptorHandle(uint32_t index);
+	/// <summary>
+	/// SRVの指定番号のGPUデスクリプタハンドルを取得する
+	/// </summary>
+	D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index);
 
 private:
 	
@@ -71,4 +88,22 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap_;
 
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap_;
+
+	std::array<Microsoft::WRL::ComPtr<ID3D12Resource>, 2>swapChainResources;
+
+	DXGI_SWAP_CHAIN_DESC1 swapChainDesc_{};
+	//RTVの設定
+	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc_{};
+
+	Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils_ = nullptr;
+	Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler_ = nullptr;
+
+	D3D12_VIEWPORT viewport{};
+	D3D12_RECT scissorRect{};
+
+	// DescriptorSizeを取得しておく
+	const uint32_t descriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	const uint32_t descriptorSizeRTV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	const uint32_t descriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+
 };
