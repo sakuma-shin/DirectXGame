@@ -64,6 +64,7 @@ struct TransformationMatrix
 struct Particle {
 	Transform transform;
 	Vector3 velocity;
+	Vector4 color;
 };
 
 //ウインドウプロシーシャ
@@ -513,6 +514,16 @@ D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descrip
 	return handleGPU;
 }
 
+Particle MakeNewParticle(std::mt19937& randomEngine) {
+	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
+	Particle particle;
+	particle.transform.scale = { 1.0f,1.0f,1.0f };
+	particle.transform.rotate = { 0.0f,3.14f,0.0f };
+	particle.transform.translate = { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
+	particle.velocity= { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
+	return particle;
+}
+
 //Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
@@ -520,7 +531,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	WNDCLASS wc{};
 
-
+	
 	//ウインドウプロシージャ
 	wc.lpfnWndProc = WindowProc;
 	//ウインドウクラス名
@@ -1135,7 +1146,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// SRVの生成
 	device->CreateShaderResourceView(textureResource, &srvDesc, textureSrvHandleCPU);
 
+	std::random_device seeGenerator;
+	std::mt19937 randomEngine(seeGenerator());
+	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
 
+	for (uint32_t index = 0;index < kNumInstance;++index) {
+		//一と速度を[-1,1]でランダムに初期化
+		particles[index] = MakeNewParticle(randomEngine);
+
+	}
 
 	MSG msg{};
 	//ウインドウの×ボタンが押されるまでループ
@@ -1189,6 +1208,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				instancingData[index].World = worldMatrix;
 
 				particles[index].transform.translate += particles[index].velocity * kDeltaTime;
+
+			
+				
+
+				
 			}
 			//これから書き込むバックバッファのインデックスを取得
 			UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
