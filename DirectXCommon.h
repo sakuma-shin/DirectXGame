@@ -25,7 +25,7 @@ public:
 
 	void SwapChainCreate(WinApp* winApp);
 
-	void CreateDepthStencilTextureResource();
+	void DepthBufferCreate();
 
 	void DescriptorHeapCreate();
 
@@ -57,6 +57,8 @@ public:
 	/// SRVの指定番号のGPUデスクリプタハンドルを取得する
 	/// </summary>
 	D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index);
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource( int32_t width, int32_t height);
 
 private:
 	
@@ -105,5 +107,7 @@ private:
 	const uint32_t descriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	const uint32_t descriptorSizeRTV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	const uint32_t descriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource;
 
 };
