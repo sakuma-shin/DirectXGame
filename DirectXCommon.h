@@ -7,10 +7,11 @@
 #include"externals/imgui/imgui_impl_win32.h"
 #include"WinApp.h"
 #include"Logger.h"
-#include"array"
-#include<cassert>
+#include<array>
 #include <format>
 #include <dxcapi.h>
+#include"StringUtility.h"
+
 
 
 
@@ -60,6 +61,12 @@ public:
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource( int32_t width, int32_t height);
 
+	//描画前処理
+	void PreDraw();
+
+	//描画後処理
+	void PostDraw();
+
 private:
 	
 
@@ -70,8 +77,6 @@ private:
 
 	//windowsAPI
 	WinApp* winApp_ = nullptr;
-
-	HRESULT hr_;
 
 	Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain_ = nullptr;
 
@@ -92,6 +97,9 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap_;
 
 	std::array<Microsoft::WRL::ComPtr<ID3D12Resource>, 2>swapChainResources;
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
+
+	Microsoft::WRL::ComPtr<ID3D12Fence> fence = nullptr;
 
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc_{};
 	//RTVの設定
@@ -103,11 +111,12 @@ private:
 	D3D12_VIEWPORT viewport{};
 	D3D12_RECT scissorRect{};
 
-	// DescriptorSizeを取得しておく
-	const uint32_t descriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	const uint32_t descriptorSizeRTV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	const uint32_t descriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource;
+
+	// DescriptorSizeを取得しておく
+	uint32_t descriptorSizeSRV = 0;
+	uint32_t descriptorSizeRTV = 0;
+	uint32_t descriptorSizeDSV = 0;
+
 
 };
