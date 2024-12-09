@@ -118,5 +118,12 @@ private:
 	uint32_t descriptorSizeRTV = 0;
 	uint32_t descriptorSizeDSV = 0;
 
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle;
 
+	D3D12_RESOURCE_BARRIER barrier{};
+
+	// 初期値0でFenceを作る
+	uint64_t fenceValue = 0;
+
+	HANDLE fenceEvent;
 };
