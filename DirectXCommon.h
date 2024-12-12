@@ -67,6 +67,19 @@ public:
 	//描画後処理
 	void PostDraw();
 
+	ID3D12Device* GetDevice() const { return device.Get(); }
+	ID3D12GraphicsCommandList* GetCommandList() const { return commandList_.Get(); }
+
+	Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(const std::wstring& filePath, const wchar_t* profile);
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeinBytes);
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(const DirectX::TexMetadata& metadata);
+
+	void UpLoadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages);
+
+	static DirectX::ScratchImage LoadTexture(const std::string& filePath);
+
 private:
 	
 
@@ -105,8 +118,9 @@ private:
 	//RTVの設定
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc_{};
 
-	Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils_ = nullptr;
-	Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler_ = nullptr;
+	Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils;
+	Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler;
+	Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler;
 
 	D3D12_VIEWPORT viewport{};
 	D3D12_RECT scissorRect{};

@@ -454,43 +454,43 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	
 
-	//// RootSignature作成
-	//D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
-	//descriptionRootSignature.Flags =
-	//	D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+	// RootSignature作成
+	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
+	descriptionRootSignature.Flags =
+		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
-	//D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
-	//descriptorRange[0].BaseShaderRegister = 0;//0から始まる
-	//descriptorRange[0].NumDescriptors = 1;	//数は一つ
-	//descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;//SRVを使う
-	//descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+	descriptorRange[0].BaseShaderRegister = 0;//0から始まる
+	descriptorRange[0].NumDescriptors = 1;	//数は一つ
+	descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;//SRVを使う
+	descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-	////Rootparameter作成。 複数設定できるので配列。 今回は結果1つだけなので長さ1の配列
-	//D3D12_ROOT_PARAMETER rootParameters[3] = {};
-	//rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; //CBVを使う
-	//rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; //PixelShaderを使う
-	//rootParameters[0].Descriptor.ShaderRegister = 0;					//レジスタ番号0とバインド
-	//rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; //CBVを使う
-	//rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX; //PixelShaderを使う
-	//rootParameters[1].Descriptor.ShaderRegister = 0;					//レジスタ番号0とバインド
-	//rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;//DescriptorTableを使う
-	//rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
-	//rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange;
-	//rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
-	//descriptionRootSignature.pParameters = rootParameters;	//ルートパラメータ配列へのポインタ
-	//descriptionRootSignature.NumParameters = _countof(rootParameters);	//配列の長さ
+	//Rootparameter作成。 複数設定できるので配列。 今回は結果1つだけなので長さ1の配列
+	D3D12_ROOT_PARAMETER rootParameters[3] = {};
+	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; //CBVを使う
+	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; //PixelShaderを使う
+	rootParameters[0].Descriptor.ShaderRegister = 0;					//レジスタ番号0とバインド
+	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; //CBVを使う
+	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX; //PixelShaderを使う
+	rootParameters[1].Descriptor.ShaderRegister = 0;					//レジスタ番号0とバインド
+	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;//DescriptorTableを使う
+	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
+	rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange;
+	rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+	descriptionRootSignature.pParameters = rootParameters;	//ルートパラメータ配列へのポインタ
+	descriptionRootSignature.NumParameters = _countof(rootParameters);	//配列の長さ
 
-	//D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
-	//staticSamplers[0].Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;//パイリニアフィルタ
-	//staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	//staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	//staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	//staticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-	//staticSamplers[0].MaxLOD = D3D12_FLOAT32_MAX;
-	//staticSamplers[0].ShaderRegister = 0;
-	//staticSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	//descriptionRootSignature.pStaticSamplers = staticSamplers;
-	//descriptionRootSignature.NumStaticSamplers = _countof(staticSamplers);
+	D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
+	staticSamplers[0].Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;//パイリニアフィルタ
+	staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	staticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+	staticSamplers[0].MaxLOD = D3D12_FLOAT32_MAX;
+	staticSamplers[0].ShaderRegister = 0;
+	staticSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	descriptionRootSignature.pStaticSamplers = staticSamplers;
+	descriptionRootSignature.NumStaticSamplers = _countof(staticSamplers);
 
 	//	// シリアライズしてバイナリにする
 	//	ID3DBlob* signatureBlob = nullptr;
@@ -609,18 +609,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//device->CreateDepthStencilView(depthStencilResource, &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
 
-	////wvp用のリソースを作る。Matarix4x41つ分にする
+	//wvp用のリソースを作る。Matarix4x41つ分にする
 	//ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(Matrix4x4));
 
 
 
-	////データを書き込む
+	//データを書き込む
 	//Matrix4x4* wvpData = nullptr;
 
-	////書き込むためのアドレスを取得
+	//書き込むためのアドレスを取得
 	//wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
 
-	////単位行列を書き込んでおく
+	//単位行列を書き込んでおく
 	//*wvpData = MakeIdentity4x4();
 
 	////マテリアルにデータを読み込む
@@ -754,22 +754,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			break;
 		}
 		//ゲームの処理
-		// 
-		//ImGui_ImplDX12_NewFrame();
-		//ImGui_ImplWin32_NewFrame();
-		//ImGui::NewFrame();
-		////開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム用の処理に置き換える
-		////ImGui::ShowDemoWindow();
+		 
+		/*ImGui_ImplDX12_NewFrame();
+		ImGui_ImplWin32_NewFrame();
+		ImGui::NewFrame();*/
+		//開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム用の処理に置き換える
+		//ImGui::ShowDemoWindow();
 
-		//ImGui::Begin("Window");
-		//ImGui::DragFloat3("color", &materialData->x, 0.01f);
-		//ImGui::DragFloat3("modelScale", &transform.scale.x, 0.01f);
-		//ImGui::DragFloat3("modelRotate", &transform.rotate.x, 0.01f);
-		//ImGui::DragFloat3("modelTranslate", &transform.translate.x, 0.01f);
-		//ImGui::DragFloat3("spriteTranslate", &transformSprite.translate.x, 0.01f);
-		//ImGui::DragFloat3("spriteScale", &transformSprite.scale.x, 0.01f);
-		//ImGui::DragFloat3("spriteRotate", &transformSprite.rotate.x, 0.01f);
-		//ImGui::End();
+
 
 		input->Update();
 
