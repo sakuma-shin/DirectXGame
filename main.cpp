@@ -1173,9 +1173,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				instancingData[numInstance].WVP = worldViewProjectionMatrix;
 				instancingData[numInstance].World = worldMatrix;
 				instancingData[numInstance].color = particles[index].color;
+				float alpha = 1.0f - (particles[index].currentTime / particles[index].lifeTime);
+				instancingData[numInstance].color.w = alpha;
+				
 				++numInstance;
 
-				particles[index].velocity = {0.0f, 1.0f, 0.0f};
+				/*particles[index].velocity = {0.0f, 1.0f, 0.0f};*/
 			}
 			// これから書き込むバックバッファのインデックスを取得
 			UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
