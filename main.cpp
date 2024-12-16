@@ -240,104 +240,104 @@ struct ModelData {
 //	}
 //}
 //
-//MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
-//	//1,中で必要となる変数の宣言
-//	MaterialData materialData; // 構築するMaterialData
-//	std::string line; // ファイルから読んだ1行を格納するもの
-//	//2,ファイルを開く
-//	std::ifstream file(directoryPath + "/" + filename); // ファイルを開く
-//	assert(file.is_open()); // とりあえず開けなかったら止める
-//	//3,実際にファイルを読み、MaterialDataを構築していく
-//	while (std::getline(file, line)) {
-//		std::string identifier;
-//		std::istringstream s(line);
-//		s >> identifier;
-//		// identifierに応じた処理
-//		if (identifier == "map_Kd") {
-//			std::string textureFilename;
-//			s >> textureFilename;
-//			// 連結してファイルパスにする
-//			materialData.textureFilePath = directoryPath + "/" + textureFilename;
-//		}
+MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
+	//1,中で必要となる変数の宣言
+	MaterialData materialData; // 構築するMaterialData
+	std::string line; // ファイルから読んだ1行を格納するもの
+	//2,ファイルを開く
+	std::ifstream file(directoryPath + "/" + filename); // ファイルを開く
+	assert(file.is_open()); // とりあえず開けなかったら止める
+	//3,実際にファイルを読み、MaterialDataを構築していく
+	while (std::getline(file, line)) {
+		std::string identifier;
+		std::istringstream s(line);
+		s >> identifier;
+		// identifierに応じた処理
+		if (identifier == "map_Kd") {
+			std::string textureFilename;
+			s >> textureFilename;
+			// 連結してファイルパスにする
+			materialData.textureFilePath = directoryPath + "/" + textureFilename;
+		}
+
+	}
+	//4,MaterialDataを返す
+	return materialData;
+}
 //
-//	}
-//	//4,MaterialDataを返す
-//	return materialData;
-//}
-//
-//ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename) {
-//	//1.中で必要となる変数の宣言
-//	ModelData modelData; //構築するモデルデータ
-//	std::vector<Vector4> positions; //位置
-//	std::vector<Vector3> normals; //法線
-//	std::vector<Vector2> texcoords; //テクスチャ座標
-//	std::string line; //ファイルから読み込んだ1行を格納するもの
-//
-//	//2.ファイルを開く 
-//	std::ifstream file(directoryPath + "/" + filename); //ファイルを開く
-//	assert(file.is_open());
-//
-//	//3.実際にファイルを読み込み
-//	while (std::getline(file, line)) {
-//		std::string identifier;
-//		std::istringstream s(line);
-//		s >> identifier; //先頭の識別子を読む
-//
-//		//identifierに応じた処理
-//		if (identifier == "v") {
-//			Vector4 position;
-//			s >> position.x >> position.y >> position.z;
-//			position.w = 1.0f;
-//			positions.push_back(position);
-//		} else if (identifier == "vt") {
-//			Vector2 texcoord;
-//			s >> texcoord.x >> texcoord.y;
-//			texcoords.push_back(texcoord);
-//		} else if (identifier == "vn") {
-//			Vector3 normal;
-//			s >> normal.x >> normal.y >> normal.z;
-//			normals.push_back(normal);
-//		} else if (identifier == "f") {
-//			VertexData triangle[3];
-//			//面は三角形限定。その他は未対応
-//			for (int32_t faceVertex = 0;faceVertex < 3;++faceVertex) {
-//				std::string vertexDefinition;
-//				s >> vertexDefinition;
-//				//頂点の要素へのIndexは「位置/UV/法線」で格納されているので、分解してIndexを取得する
-//				std::istringstream v(vertexDefinition);
-//				uint32_t elementIndices[3];
-//				for (int32_t element = 0;element < 3;++element) {
-//					std::string index;
-//					std::getline(v, index, '/'); //区切りでインデックスを読んでいく
-//					elementIndices[element] = std::stoi(index);
-//				}
-//				//要素へのIndexから、実際の要素の値を取得して、頂点を構築する
-//				Vector4 position = positions[elementIndices[0] - 1];
-//				Vector2 texcoord = texcoords[elementIndices[1] - 1];
-//				Vector3 normal = normals[elementIndices[2] - 1];
-//				/*VertexData vertex = { position,texcoord,normal };
-//				modelData.vertices.push_back(vertex);*/
-//
-//				position.x *= -1.0f;
-//				texcoord.y = 1.0f - texcoord.y;
-//				normal.x *= -1.0f;
-//				triangle[faceVertex] = { position,texcoord,normal };
-//			}
-//			//頂点を逆順で登録することで、周り順を逆にする
-//			modelData.vertices.push_back(triangle[2]);
-//			modelData.vertices.push_back(triangle[1]);
-//			modelData.vertices.push_back(triangle[0]);
-//		} else if (identifier == "mtllib") {
-//			// materialTemplateLibraryファイルの名前を取得する
-//			std::string materialFilename;
-//			s >> materialFilename;
-//			// 基本的にobjファイルと同一階層にmtlは存在させるので、ディレクトリ名とファイル名を渡す
-//			modelData.material = LoadMaterialTemplateFile(directoryPath, materialFilename);
-//		}
-//	}
-//	//4.ModelDataを返す
-//	return modelData;
-//}
+ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename) {
+	//1.中で必要となる変数の宣言
+	ModelData modelData; //構築するモデルデータ
+	std::vector<Vector4> positions; //位置
+	std::vector<Vector3> normals; //法線
+	std::vector<Vector2> texcoords; //テクスチャ座標
+	std::string line; //ファイルから読み込んだ1行を格納するもの
+
+	//2.ファイルを開く 
+	std::ifstream file(directoryPath + "/" + filename); //ファイルを開く
+	assert(file.is_open());
+
+	//3.実際にファイルを読み込み
+	while (std::getline(file, line)) {
+		std::string identifier;
+		std::istringstream s(line);
+		s >> identifier; //先頭の識別子を読む
+
+		//identifierに応じた処理
+		if (identifier == "v") {
+			Vector4 position;
+			s >> position.x >> position.y >> position.z;
+			position.w = 1.0f;
+			positions.push_back(position);
+		} else if (identifier == "vt") {
+			Vector2 texcoord;
+			s >> texcoord.x >> texcoord.y;
+			texcoords.push_back(texcoord);
+		} else if (identifier == "vn") {
+			Vector3 normal;
+			s >> normal.x >> normal.y >> normal.z;
+			normals.push_back(normal);
+		} else if (identifier == "f") {
+			VertexData triangle[3];
+			//面は三角形限定。その他は未対応
+			for (int32_t faceVertex = 0;faceVertex < 3;++faceVertex) {
+				std::string vertexDefinition;
+				s >> vertexDefinition;
+				//頂点の要素へのIndexは「位置/UV/法線」で格納されているので、分解してIndexを取得する
+				std::istringstream v(vertexDefinition);
+				uint32_t elementIndices[3];
+				for (int32_t element = 0;element < 3;++element) {
+					std::string index;
+					std::getline(v, index, '/'); //区切りでインデックスを読んでいく
+					elementIndices[element] = std::stoi(index);
+				}
+				//要素へのIndexから、実際の要素の値を取得して、頂点を構築する
+				Vector4 position = positions[elementIndices[0] - 1];
+				Vector2 texcoord = texcoords[elementIndices[1] - 1];
+				Vector3 normal = normals[elementIndices[2] - 1];
+				/*VertexData vertex = { position,texcoord,normal };
+				modelData.vertices.push_back(vertex);*/
+
+				position.x *= -1.0f;
+				texcoord.y = 1.0f - texcoord.y;
+				normal.x *= -1.0f;
+				triangle[faceVertex] = { position,texcoord,normal };
+			}
+			//頂点を逆順で登録することで、周り順を逆にする
+			modelData.vertices.push_back(triangle[2]);
+			modelData.vertices.push_back(triangle[1]);
+			modelData.vertices.push_back(triangle[0]);
+		} else if (identifier == "mtllib") {
+			// materialTemplateLibraryファイルの名前を取得する
+			std::string materialFilename;
+			s >> materialFilename;
+			// 基本的にobjファイルと同一階層にmtlは存在させるので、ディレクトリ名とファイル名を渡す
+			modelData.material = LoadMaterialTemplateFile(directoryPath, materialFilename);
+		}
+	}
+	//4.ModelDataを返す
+	return modelData;
+}
 //
 //
 //ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename) {
@@ -509,47 +509,47 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//assert(SUCCEEDED(hr));
 
-	////InputLayOut
-	//D3D12_INPUT_ELEMENT_DESC inputElementDescs[2] = {};
-	//inputElementDescs[0].SemanticName = "POSITION";
-	//inputElementDescs[0].SemanticIndex = 0;
-	//inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	//inputElementDescs[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-	//inputElementDescs[1].SemanticName = "TEXCOORD";
-	//inputElementDescs[1].SemanticIndex = 0;
-	//inputElementDescs[1].Format = DXGI_FORMAT_R32G32_FLOAT;
-	//inputElementDescs[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-	//D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
-	//inputLayoutDesc.pInputElementDescs = inputElementDescs;
-	//inputLayoutDesc.NumElements = _countof(inputElementDescs);
+	//InputLayOut
+	D3D12_INPUT_ELEMENT_DESC inputElementDescs[2] = {};
+	inputElementDescs[0].SemanticName = "POSITION";
+	inputElementDescs[0].SemanticIndex = 0;
+	inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	inputElementDescs[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+	inputElementDescs[1].SemanticName = "TEXCOORD";
+	inputElementDescs[1].SemanticIndex = 0;
+	inputElementDescs[1].Format = DXGI_FORMAT_R32G32_FLOAT;
+	inputElementDescs[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
+	inputLayoutDesc.pInputElementDescs = inputElementDescs;
+	inputLayoutDesc.NumElements = _countof(inputElementDescs);
 
 
-	////BlendStateの設定
-	//D3D12_BLEND_DESC blendDesc{};
+	//BlendStateの設定
+	D3D12_BLEND_DESC blendDesc{};
 
-	////全ての色要素を書き込む
-	//blendDesc.RenderTarget[0].RenderTargetWriteMask =
-	//	D3D12_COLOR_WRITE_ENABLE_ALL;
+	//全ての色要素を書き込む
+	blendDesc.RenderTarget[0].RenderTargetWriteMask =
+		D3D12_COLOR_WRITE_ENABLE_ALL;
 
-	////RasiterzerStateの設定
-	//D3D12_RASTERIZER_DESC rasterizerDesc{};
-	////裏面(時計回り)を表示しない
-	//rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
-	////三角形の中を塗りつぶす
-	//rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
-	////DepthStenicStateの設定
-	//D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
-	////Depthの機能を有効化する
-	//depthStencilDesc.DepthEnable = true;
-	////書き込みします
-	//depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-	////比較関数はLessEqual。つまり、近ければ描画される
-	//depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	//RasiterzerStateの設定
+	D3D12_RASTERIZER_DESC rasterizerDesc{};
+	//裏面(時計回り)を表示しない
+	rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
+	//三角形の中を塗りつぶす
+	rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
+	//DepthStenicStateの設定
+	D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
+	//Depthの機能を有効化する
+	depthStencilDesc.DepthEnable = true;
+	//書き込みします
+	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	//比較関数はLessEqual。つまり、近ければ描画される
+	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 
-	////DepthStencilの設定
+	//DepthStencilの設定
 
 
-	////Shaderをコンパイルする
+	//Shaderをコンパイルする
 	//IDxcBlob* vertexShaderBlob = CompileShader(L"Resources/shaders/Object3D.VS.hlsl",
 	//	L"vs_6_0", dxcUtils, dxcCompiler, includeHandler);
 	//assert(vertexShaderBlob != nullptr);
@@ -587,30 +587,30 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//graphicsPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
 
-	//// 実際に生成
+	// 実際に生成
 	//ID3D12PipelineState* graphicsPipelineState = nullptr;
 	//hr = device->CreateGraphicsPipelineState(&graphicsPipelineStateDesc,
 	//	IID_PPV_ARGS(&graphicsPipelineState));
 	//assert(SUCCEEDED(hr));
 
 
-	////モデル読み込み
-	//ModelData modelData = LoadObjFile("resources", "plane.obj");
-	////頂点リソースを作る
+	//モデル読み込み
+	ModelData modeldata = LoadObjFile("resources", "plane.obj");
+	//頂点リソースを作る
 
-	//ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * modelData.vertices.size());
+	ID3D12Resource* vertexresource = CreateBufferResource(device, sizeof(vertexdata) * modeldata.vertices.size());
 
-	//ID3D12Resource* materialResource = CreateBufferResource(device, sizeof(Vector4));
-	//
+	ID3D12Resource* materialresource = createbufferresource(device, sizeof(vector4));
+	
 
-	//ID3D12Resource* vertexResourceSprite = CreateBufferResource(device, sizeof(VertexData) * 6);
+	ID3D12Resource* vertexresourcesprite = createbufferresource(device, sizeof(vertexdata) * 6);
 
-	////DSVHeapの先頭にDSVを作る
-	//device->CreateDepthStencilView(depthStencilResource, &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	////dsvheapの先頭にdsvを作る
+	//device->createdepthstencilview(depthstencilresource, &dsvdesc, dsvdescriptorheap->getcpudescriptorhandleforheapstart());
 
 
-	//wvp用のリソースを作る。Matarix4x41つ分にする
-	//ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(Matrix4x4));
+	/*wvp用のリソースを作る。matarix4x41つ分にする*/
+	ID3D12Resource* wvpresource = createbufferresource(device, sizeof(Matrix4x4));
 
 
 
