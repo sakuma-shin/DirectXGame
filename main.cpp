@@ -794,23 +794,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		*transformationMatrixDataSprite = worldViewProjectionMatrixSprite;
 
-		ImGui::Begin("Window");
-		
-		ImGui::DragFloat3("color", &materialData->color.x, 0.01f);
-		ImGui::DragFloat3("translate", &transform.translate.x, 0.01f);
-		ImGui::DragFloat3("scale", &transform.scale.x, 0.01f);
-		ImGui::DragFloat3("rotate", &transform.rotate.x, 0.01f);
-		ImGui::DragFloat3("sprite.transform", &transformSprite.translate.x, 0.3f);
-		ImGui::DragFloat2("sprite.scale", &transformSprite.scale.x, 0.01f);
-		ImGui::DragFloat2("sprite.rotate", &transformSprite.rotate.x, 0.01f);
-		//ImGui::Checkbox("useMonsterBall", &useMonsterBall);
-		/*ImGui::SliderAngle("Light.color", &directionalLightData->color.x, 0.01f);
-		ImGui::SliderAngle("Light.direction", &directionalLightData->direction.x, 0.01f);
-		ImGui::SliderAngle("Light.intensity", &directionalLightData->intensity, 0.01f);
-		ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
-		ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
-		ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
-		ImGui::End();*/
+	ImGui::Begin("Window");
+		/*ImGui::DragFloat3("color", &materialData->x, 0.01f);*/
+		ImGui::DragFloat3("modelScale", &transform.scale.x, 0.01f);
+		ImGui::DragFloat3("modelRotate", &transform.rotate.x, 0.01f);
+		ImGui::DragFloat3("modelTranslate", &transform.translate.x, 0.01f);
+		ImGui::DragFloat3("spriteTranslate", &transformSprite.translate.x, 0.01f);
+		ImGui::DragFloat3("spriteScale", &transformSprite.scale.x, 0.01f);
+		ImGui::DragFloat3("spriteRotate", &transformSprite.rotate.x, 0.01f);
+		ImGui::ColorEdit4("color", &materialData->x, 0.01f);
+		ImGui::End();
 
 		//描画前処理
 		dxCommon->PreDraw();
