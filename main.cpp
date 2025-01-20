@@ -807,17 +807,29 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//描画前処理
 		dxCommon->PreDraw();
 
-		////RootSignatureを設定。　PSOの設定しているけど別で設定が必要
+		//////RootSignatureを設定。　PSOの設定しているけど別で設定が必要
+		//dxCommon->GetCommandList()->SetGraphicsRootSignature(rootSignature);
+		//dxCommon->GetCommandList()->SetPipelineState(graphicsPipelineState); //PSOを設定
+		//dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView); //VBVを設定
+		////形状を設定。PSOに設定しているものとはまた別。同じ物を設定すると考えておけばいい。
+		//dxCommon->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		////マテリアルCBufferの場所を設定
+		//dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+		////wvp用のCBufferの場所を設定
+		//dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+		////SRVのDescriptorTableの先頭を設定。　2はrootParameter[2]である。
+		//dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+
 		dxCommon->GetCommandList()->SetGraphicsRootSignature(rootSignature);
-		dxCommon->GetCommandList()->SetPipelineState(graphicsPipelineState); //PSOを設定
-		dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView); //VBVを設定
-		//形状を設定。PSOに設定しているものとはまた別。同じ物を設定すると考えておけばいい。
+		dxCommon->GetCommandList()->SetPipelineState(graphicsPipelineState);     // PSOを設定
+		dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView); // VBVを設定
+		// 形状を設定。PSOに設定しているものとはまた別。同じ物を設定すると考えておけばいい。
 		dxCommon->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		//マテリアルCBufferの場所を設定
+		// マテリアルCBufferの場所を設定
 		dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-		//wvp用のCBufferの場所を設定
+		// wvp用のCBufferの場所を設定
 		dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
-		//SRVのDescriptorTableの先頭を設定。　2はrootParameter[2]である。
+		// SRVのDescriptorTableの先頭を設定。　2はrootParameter[2]である。
 		dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 
 		//ImGuiの内部コマンドを生成する
