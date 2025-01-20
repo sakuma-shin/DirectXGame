@@ -80,6 +80,8 @@ public:
 
 	static DirectX::ScratchImage LoadTexture(const std::string& filePath);
 
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> GetSrvDescriptorHeap() const { return srvDescriptorHeap_; }
+
 private:
 	
 

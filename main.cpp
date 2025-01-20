@@ -607,7 +607,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	////dsvheapの先頭にdsvを作る
 	/*device->createdepthstencilview(depthstencilresource, &dsvdesc, dsvdescriptorheap->getcpudescriptorhandleforheapstart());*/
-	/*dxCommon->CreateDepthStencilTextureResource(depthStencilResource, &dsvdesc, dsvdescriptorheap->getcpudescriptorhandleforheapstart())*/
+	//dxCommon->CreateDepthStencilTextureResource(depthStencilResource, &dsvdesc, dsvdescriptorheap->getcpudescriptorhandleforheapstart())
 
 	/*wvp用のリソースを作る。matarix4x41つ分にする*/
 	ComPtr<ID3D12Resource> wvpResource = dxCommon->CreateBufferResource(sizeof(Matrix4x4));
@@ -728,26 +728,26 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	dxCommon->UpLoadTextureData(textureResource.Get(), mipImages);
 
 
-	// metaDataを基にSRVの設定
-	//D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-	//srvDesc.Format = metadata.format;
-	//srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	//srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D; //2Dテクスチャ
-	//srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
-	//// SRVを作成する DescriptorHeapの場所を決める
-	////D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	////D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
-	//
-	//D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = dxCommon->GetCPUDescriptorHandle();
-	//D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
-	//// 
+	//metaDataを基にSRVの設定
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+	srvDesc.Format = metadata.format;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D; //2Dテクスチャ
+	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
+	// SRVを作成する DescriptorHeapの場所を決める
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = dxCommon->GetSrvDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = dxCommon->GetSrvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
+	
+	/*D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = dxCommon->GetCPUDescriptorHandle();
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = dxCommon->GetSrvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();*/
 	// 
-	// 
-	// 先頭はImGuiが使っているのでその次を使う
-	/*textureSrvHandleCPU.ptr += dxCommon->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	textureSrvHandleGPU.ptr += dxCommon->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);*/
-	// SRVの生成
-	/*dxCommon->GetDevice->CreateShaderResourceView(textureResource, &srvDesc, textureSrvHandleCPU);*/
+	 
+	 
+	 //先頭はImGuiが使っているのでその次を使う
+	textureSrvHandleCPU.ptr += dxCommon->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	textureSrvHandleGPU.ptr += dxCommon->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	 //SRVの生成
+	dxCommon->GetDevice()->CreateShaderResourceView(textureResource.Get(), &srvDesc, textureSrvHandleCPU);
 
 
 
@@ -795,7 +795,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		*transformationMatrixDataSprite = worldViewProjectionMatrixSprite;
 
 	ImGui::Begin("Window");
-		/*ImGui::DragFloat3("color", &materialData->x, 0.01f);*/
 		ImGui::DragFloat3("modelScale", &transform.scale.x, 0.01f);
 		ImGui::DragFloat3("modelRotate", &transform.rotate.x, 0.01f);
 		ImGui::DragFloat3("modelTranslate", &transform.translate.x, 0.01f);
@@ -807,7 +806,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		//描画前処理
 		dxCommon->PreDraw();
-		//Imguiの色変えるのにはここに
 
 		////RootSignatureを設定。　PSOの設定しているけど別で設定が必要
 		dxCommon->GetCommandList()->SetGraphicsRootSignature(rootSignature);
@@ -820,7 +818,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//wvp用のCBufferの場所を設定
 		dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 		//SRVのDescriptorTableの先頭を設定。　2はrootParameter[2]である。
-		/*dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);*/
+		dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 
 		//ImGuiの内部コマンドを生成する
 		ImGui::Render();///////////
@@ -830,13 +828,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		dxCommon->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 
 		////Spriteの描画
-
-
 		dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewSprite); //VBVを設定
 		dxCommon->GetCommandList()->IASetIndexBuffer(&indexBufferViewSprite);
 
 		////TransformationMatrixCBufferの場所を設定
 		dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
+
+		dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, materialResource->GetGPUVirtualAddress());
 		//描画
 		dxCommon->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
@@ -847,8 +845,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		dxCommon->PostDraw();
 		// 画面に描く処理はすべて終わり、画面に映すので、状態を遷移
 		//今回はRenderTargetからPresentにする
-//		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-//		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+		/*barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;*/
 //		// TransitionBarrierを張る
 //		dxCommon->GetCommandList()->ResourceBarrier(1, &barrier);
 //
