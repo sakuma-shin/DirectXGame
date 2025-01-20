@@ -606,7 +606,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ComPtr<ID3D12Resource> vertexResourceSprite = dxCommon->CreateBufferResource(sizeof(VertexData) * 6);
 
 	////dsvheapの先頭にdsvを作る
-	//device->createdepthstencilview(depthstencilresource, &dsvdesc, dsvdescriptorheap->getcpudescriptorhandleforheapstart());
+	/*device->createdepthstencilview(depthstencilresource, &dsvdesc, dsvdescriptorheap->getcpudescriptorhandleforheapstart());*/
 	/*dxCommon->CreateDepthStencilTextureResource(depthStencilResource, &dsvdesc, dsvdescriptorheap->getcpudescriptorhandleforheapstart())*/
 
 	/*wvp用のリソースを作る。matarix4x41つ分にする*/
@@ -820,7 +820,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//wvp用のCBufferの場所を設定
 		dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 		//SRVのDescriptorTableの先頭を設定。　2はrootParameter[2]である。
-	/*	dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);*/
+		/*dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);*/
 
 		//ImGuiの内部コマンドを生成する
 		ImGui::Render();///////////
