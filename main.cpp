@@ -53,8 +53,22 @@ struct ModelData {
 
 struct TransformationMatrix {
 	Matrix4x4 WVP;
-
 	Matrix4x4 World;
+};
+struct CameraForGPU {
+	Vector3 worldPosition;
+};
+
+struct Material {
+	Vector4 color;
+	int32_t enableLighting;
+	float shininess;
+};
+
+struct DirectionalLight {
+	Vector4 color;
+	Vector3 direction;
+	float intensity;
 };
 
 // ウインドウプロシーシャ
@@ -712,7 +726,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	// Rootparameter作成。 複数設定できるので配列。 今回は結果1つだけなので長さ1の配列
-	D3D12_ROOT_PARAMETER rootParameters[3] = {};
+	D3D12_ROOT_PARAMETER rootParameters[5] = {};
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;              // CBVを使う
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;           // PixelShaderを使う
 	rootParameters[0].Descriptor.ShaderRegister = 0;                              // レジスタ番号0とバインド
@@ -723,6 +737,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;           // PixelShaderで使う
 	rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange;
 	rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+	rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // DescriptorTableを使う
+	rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;   
+	rootParameters[3].Descriptor.ShaderRegister = 1;
+	rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;    // CBVを使う
+	rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // PixelShaderで使う
+	rootParameters[4].Descriptor.ShaderRegister = 2;                    // レジスタ番号2を使う
+
 	descriptionRootSignature.pParameters = rootParameters;             // ルートパラメータ配列へのポインタ
 	descriptionRootSignature.NumParameters = _countof(rootParameters); // 配列の長さ
 
@@ -754,7 +775,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	assert(SUCCEEDED(hr));
 
 	// InputLayOut
-	D3D12_INPUT_ELEMENT_DESC inputElementDescs[2] = {};
+	D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
 	inputElementDescs[0].SemanticName = "POSITION";
 	inputElementDescs[0].SemanticIndex = 0;
 	inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
@@ -763,6 +784,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	inputElementDescs[1].SemanticIndex = 0;
 	inputElementDescs[1].Format = DXGI_FORMAT_R32G32_FLOAT;
 	inputElementDescs[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+	inputElementDescs[2].SemanticName = "NORMAL";
+	inputElementDescs[2].SemanticIndex = 0;
+	inputElementDescs[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+	inputElementDescs[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
 	inputLayoutDesc.pInputElementDescs = inputElementDescs;
 	inputLayoutDesc.NumElements = _countof(inputElementDescs);
@@ -828,7 +853,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	const uint32_t kVertexCount = kSubdivision * kSubdivision * 6;
 
 	// モデル読み込み
-	ModelData modelData = LoadObjFile("resources", "plane.obj");
+	//ModelData modelData = LoadObjFile("resources", "plane.obj");
 	// 頂点リソースを作る
 	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * kVertexCount);
 
@@ -836,6 +861,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ID3D12Resource* depthStencilResource = CreateDepthStencilTextureResource(device, kCilentWidth, kCilentHeight);
 
 	ID3D12Resource* vertexResourceSprite = CreateBufferResource(device, sizeof(VertexData) * kVertexCount);
+
+	// カメラ用のリソースを作る
+	ID3D12Resource* cameraResource = CreateBufferResource(device, sizeof(CameraForGPU));
+	// マテリアルにデータを書き込む
+	CameraForGPU* cameraData = nullptr;
+	// 書き込むためのアドレスを取得
+	cameraResource->Map(0, nullptr, reinterpret_cast<void**>(&cameraData));
+
+	/*cameraData->worldPosition = cameraTransform.translate;*/
+
+
+
+
 
 	// DSVHeapの先頭にDSVを作る
 	device->CreateDepthStencilView(depthStencilResource, &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
@@ -868,18 +906,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	*wvpData = MakeIdentity4x4();
 
 	// マテリアルにデータを読み込む
-	Vector4* materialData = nullptr;
+	Material* materialData = nullptr;
 	// 書き込むためのアドレスを取得
 	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 	// 今回は赤を書き込んでみる
-	*materialData = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	materialData->enableLighting = true;
+	materialData->shininess = 100;
+
+
 
 	// 頂点バッファビューを作成する
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
 	// リソースの先頭のアドレスから使う
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
 	// 使用するリソースのサイズは頂点のサイズ
-	vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * modelData.vertices.size());
+	vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * kVertexCount);
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
 
 	// 頂点リソースにデータを書き込む
@@ -887,7 +929,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// 書き込むためのアドレスを取得
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
-	std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size()); // 頂点データをリソースのコピー
+	//std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size()); // 頂点データをリソースのコピー
 
 	// 左下
 	// vertexData[0].position = { -0.5f,-0.5f,0.0f,1.0f };
@@ -923,6 +965,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 1枚目の三角形
 	vertexDataSprite[0].position = {0.0f, 360.0f, 0.0f, 1.0f};
 	vertexDataSprite[0].texcoord = {0.0f, 1.0f};
+	vertexDataSprite[0].normal = {0.0f, 0.0f, -1.0f};
 	vertexDataSprite[1].position = {0.0f, 0.0f, 0.0f, 1.0f};
 	vertexDataSprite[1].texcoord = {0.0f, 0.0f};
 	vertexDataSprite[2].position = {640.0f, 360.0f, 0.0f, 1.0f};
@@ -959,7 +1002,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	const float kLonEvery = (2 * kPi) / float(kSubdivision); // 程度分割1つ分の角度
 	const float kLatEvery = kPi / float(kSubdivision);       // 緯度分割1つ分の角度
 	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
-		float lat = -kPi / 2.0f + kLatEvery+latIndex;
+		float lat = -kPi / 2.0f + kLatEvery*latIndex;
 		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
 			uint32_t start = (latIndex*kSubdivision + lonIndex) * 6;
 			float lon = lonIndex*kLonEvery;
@@ -1087,7 +1130,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// ImGui::ShowDemoWindow();
 
 			ImGui::Begin("Window");
-			ImGui::DragFloat3("color", &materialData->x, 0.01f);
+			/*ImGui::DragFloat3("color", &materialData->x, 0.01f);*/
 			ImGui::DragFloat3("modelScale", &transform.scale.x, 0.01f);
 			ImGui::DragFloat3("modelRotate", &transform.rotate.x, 0.01f);
 			ImGui::DragFloat3("modelTranslate", &transform.translate.x, 0.01f);
@@ -1158,10 +1201,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// SRVのDescriptorTableの先頭を設定。　2はrootParameter[2]である。
 			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 
+			commandList->SetGraphicsRootConstantBufferView(4, cameraResource->GetGPUVirtualAddress());
+
 			// ImGuiの内部コマンドを生成する
 			ImGui::Render(); ///////////
 			// 描画
-			/*commandList->DrawInstanced(6, 1, 0, 0);*/
+			commandList->DrawInstanced(6, 1, 0, 0);
+			commandList->DrawInstanced(kVertexCount, kNumInstance, 0, 0);
 			// 描画
 			commandList->DrawInstanced(kVertexCount, kNumInstance, 0, 0);
 
