@@ -9,7 +9,6 @@ struct TransformationMatrix
 
 
 ConstantBuffer<TransformationMatrix> gTransformationMatrix : register(b0);
-ConstantBuffer<Material> gMaterial : register(b0);
 
 
 struct VertexShaderInput
@@ -31,7 +30,7 @@ VertexShaderOutput main(VertexShaderInput input)
     output.worldPosition = mul(input.position, gTransformationMatrix.World).xyz;
     
    
-    output.color = gMaterial.color.textureColor;
+   
     return output;
 }
 

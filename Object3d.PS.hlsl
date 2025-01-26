@@ -29,27 +29,30 @@ PixelShaderOutput main(VertexShaderOutput input)
     float RdotE = dot(reflectLight, toEye);
     float specularPow = pow(saturate(RdotE), gMaterial.shininess);
     
+    float NdotL = dot(normalize(input.normal), normalize(-gDirectionalLight.direction));
+    float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
+    
     float32_t3 diffuse = gMaterial.color.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity;
     
     float32_t3 specular = gDirectionalLight.color.rgb * gDirectionalLight.intensity * specularPow * float32_t3(1.0f, 1.0f, 1.0f);
     
     output.color.rgb = diffuse + specular;
+    output.color = gMaterial.color.textureColor;
     output.color.a = gMaterial.color.a * textureColor.a;
     
-    //float NdotL = dot(normalize(input.normal), normalize(-gDirectionalLight.direction));
-    //float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
+
    
    
     
-    //if (gMaterial.enableLighting != 0)
-    //{ // Lightingする場合
-    //    float cos = saturate(dot(normalize(input.normal), -gDirectionalLight.direction));
-    //    output.color = gMaterial.color * textureColor * gDirectionalLight.color * cos * gDirectionalLight.intensity;
-    //}
-    //else
-    //{ // Lightingしない場合。前回までと同じ演算
-    //    output.color = gMaterial.color * textureColor;
-    //}
+    if (gMaterial.enableLighting != 0)
+    { // Lightingする場合
+        float cos = saturate(dot(normalize(input.normal), -gDirectionalLight.direction));
+        output.color = gMaterial.color * textureColor * gDirectionalLight.color * cos * gDirectionalLight.intensity;
+    }
+    else
+    { // Lightingしない場合。前回までと同じ演算
+        output.color = gMaterial.color * textureColor;
+    }
     
     
     return output;
