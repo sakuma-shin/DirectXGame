@@ -38,7 +38,7 @@ PixelShaderOutput main(VertexShaderOutput input)
     
     output.color.rgb = diffuse + specular;
     //output.color = gMaterial.color.textureColor;
-    //output.color.a = gMaterial.color.a * textureColor.a;
+    output.color.a = gMaterial.color.a * textureColor.a;
     
 
    
