@@ -37,8 +37,8 @@ PixelShaderOutput main(VertexShaderOutput input)
     float32_t3 specular = gDirectionalLight.color.rgb * gDirectionalLight.intensity * specularPow * float32_t3(1.0f, 1.0f, 1.0f);
     
     output.color.rgb = diffuse + specular;
-    output.color = gMaterial.color.textureColor;
-    output.color.a = gMaterial.color.a * textureColor.a;
+    //output.color = gMaterial.color.textureColor;
+    //output.color.a = gMaterial.color.a * textureColor.a;
     
 
    
