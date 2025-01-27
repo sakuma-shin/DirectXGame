@@ -9,6 +9,7 @@ struct VertexShaderOutput
 struct Camera
 {
     float32_t3 worldPosition;
+    float32_t padding;
 };
 
 struct DirectionalLight
@@ -24,5 +25,6 @@ struct Material
     float32_t4x4 uvTransform;
     int32_t enableLighting;
     float32_t shininess;
+    float32_t padding[2]; 
 };
 

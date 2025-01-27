@@ -43,10 +43,11 @@ PixelShaderOutput main(VertexShaderOutput input)
     
         output.color.rgb = diffuse + specular;
     //output.color = gMaterial.color.textureColor;
-        output.color.a = gMaterial.color.a * textureColor.a;
+        //output.color.a = gMaterial.color.a * textureColor.a;
         
         //float cos = saturate(dot(normalize(input.normal), -gDirectionalLight.direction));
         output.color = gMaterial.color * textureColor * gDirectionalLight.color * cos * gDirectionalLight.intensity;
+      
     }
     else
     { // Lightingしない場合。前回までと同じ演算
