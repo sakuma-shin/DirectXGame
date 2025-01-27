@@ -158,8 +158,8 @@ void DirectXCommon::SwapChainCreate(WinApp* winApp) //
 {
 	HRESULT hr;
 	// スワップチェーンを生成する
-	swapChainDesc_.Width = WinApp::kCilentWidth;        // 画面の幅。ウインドウのクライアント領域を同じものにしておく
-	swapChainDesc_.Height = WinApp::kCilentHeight;      // 画面の高さ。ウインドウのクライアント領域を同じものにしておく
+	swapChainDesc_.Width = WinApp::kWindowWidth;        // 画面の幅。ウインドウのクライアント領域を同じものにしておく
+	swapChainDesc_.Height = WinApp::kWindowHeight;      // 画面の高さ。ウインドウのクライアント領域を同じものにしておく
 	swapChainDesc_.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // 色の形式
 	swapChainDesc_.SampleDesc.Count = 1;                // マルチサンプルしない
 	swapChainDesc_.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
@@ -172,7 +172,7 @@ void DirectXCommon::SwapChainCreate(WinApp* winApp) //
 
 void DirectXCommon::DepthBufferCreate() //??
 {
-	depthStencilResource = CreateDepthStencilTextureResource(WinApp::kCilentWidth, WinApp::kCilentHeight);
+	depthStencilResource = CreateDepthStencilTextureResource(WinApp::kWindowWidth, WinApp::kWindowHeight);
 }
 
 void DirectXCommon::DescriptorHeapCreate() //
@@ -242,8 +242,8 @@ void DirectXCommon::FenceCreate() {
 void DirectXCommon::ViewPortInitialize() {
 	// ビューポート
 	// クライアント領域のサイズと一緒にして画面全体に表示
-	viewport.Width = WinApp::kCilentWidth;
-	viewport.Height = WinApp::kCilentHeight;
+	viewport.Width = WinApp::kWindowWidth;
+	viewport.Height = WinApp::kWindowHeight;
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
 	viewport.MinDepth = 0.0f;
@@ -254,9 +254,9 @@ void DirectXCommon::ScissorRectInitialize() {
 	// シザー矩形
 	// きほんてきにビューポートと同じ矩形が構成されるようにする
 	scissorRect.left = 0;
-	scissorRect.right = WinApp::kCilentWidth;
+	scissorRect.right = WinApp::kWindowWidth;
 	scissorRect.top = 0;
-	scissorRect.bottom = WinApp::kCilentHeight;
+	scissorRect.bottom = WinApp::kWindowHeight;
 }
 
 void DirectXCommon::DXCCompilerCreate() {

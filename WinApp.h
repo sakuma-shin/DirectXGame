@@ -23,8 +23,8 @@ public:
 	void Update();
 
 	//クライアント領域のサイズ
-	static const int32_t kCilentWidth = 1280;
-	static const int32_t kCilentHeight = 720;
+	static const int32_t kWindowWidth = 1280;
+	static const int32_t kWindowHeight = 720;
 
 	HWND GetHwnd()const { return hwnd; }
 	HINSTANCE GetHinstance()const { return wc.hInstance; }

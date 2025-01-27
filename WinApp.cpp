@@ -40,7 +40,7 @@ void WinApp::Initialize()
 
 
 	//ウインドウサイズを表す構造体にクライアント領域を入れる
-	RECT wrc = { 0,0,kCilentWidth,kCilentHeight };
+	RECT wrc = { 0,0,kWindowWidth,kWindowHeight};
 
 	//クライアント領域を元に実際のサイズにwrcを変更してもらう
 	AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
