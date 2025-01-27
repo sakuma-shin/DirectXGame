@@ -775,25 +775,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			OutputDebugStringA("Hit 0\n"); //出力ウインドウに表示
 		}
 
-		///*transform.rotate.y += 0.03f;*/
-		Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-		Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
-		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-		Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, WinApp::kCilentWidth / WinApp::kCilentHeight, 0.1f, 100.0f);
-		//WVPMatrixを作る
-		Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
-		*wvpData = worldViewProjectionMatrix;
-
-		//sprite用のworldViewProjectionMatrixを作る
-		Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
-		Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
-		Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(WinApp::kCilentWidth), float(WinApp::
-			WinApp::kCilentHeight), 0.0f, 100.0f);
-		//WVPMatrixを作る
-		Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
-
-		*transformationMatrixDataSprite = worldViewProjectionMatrixSprite;
-
+		
 	ImGui::Begin("Window");
 		ImGui::DragFloat3("modelScale", &transform.scale.x, 0.01f);
 		ImGui::DragFloat3("modelRotate", &transform.rotate.x, 0.01f);
@@ -804,38 +786,46 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::ColorEdit4("color", &materialData->x, 0.01f);
 		ImGui::End();
 
+		///*transform.rotate.y += 0.03f;*/
+		Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+		Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
+		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+		Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, WinApp::kCilentWidth / WinApp::kCilentHeight, 0.1f, 100.0f);
+		// WVPMatrixを作る
+		Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+		*wvpData = worldViewProjectionMatrix;
+
+	// sprite用のworldViewProjectionMatrixを作る
+		Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
+		Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
+		Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, WinApp::kCilentWidth, WinApp::kCilentHeight, 0.0f, 100.0f);
+		// WVPMatrixを作る
+		Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
+
+		*transformationMatrixDataSprite = worldViewProjectionMatrixSprite;
+
+
 		//描画前処理
 		dxCommon->PreDraw();
 
-		//////RootSignatureを設定。　PSOの設定しているけど別で設定が必要
-		//dxCommon->GetCommandList()->SetGraphicsRootSignature(rootSignature);
-		//dxCommon->GetCommandList()->SetPipelineState(graphicsPipelineState); //PSOを設定
-		//dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView); //VBVを設定
-		////形状を設定。PSOに設定しているものとはまた別。同じ物を設定すると考えておけばいい。
-		//dxCommon->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		////マテリアルCBufferの場所を設定
-		//dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-		////wvp用のCBufferの場所を設定
-		//dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
-		////SRVのDescriptorTableの先頭を設定。　2はrootParameter[2]である。
-		//dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
-
+		////RootSignatureを設定。　PSOの設定しているけど別で設定が必要
 		dxCommon->GetCommandList()->SetGraphicsRootSignature(rootSignature);
-		dxCommon->GetCommandList()->SetPipelineState(graphicsPipelineState);     // PSOを設定
-		dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView); // VBVを設定
-		// 形状を設定。PSOに設定しているものとはまた別。同じ物を設定すると考えておけばいい。
+		dxCommon->GetCommandList()->SetPipelineState(graphicsPipelineState); //PSOを設定
+		dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView); //VBVを設定
+		//形状を設定。PSOに設定しているものとはまた別。同じ物を設定すると考えておけばいい。
 		dxCommon->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		// マテリアルCBufferの場所を設定
+		//マテリアルCBufferの場所を設定
 		dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-		// wvp用のCBufferの場所を設定
+		//wvp用のCBufferの場所を設定
 		dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
-		// SRVのDescriptorTableの先頭を設定。　2はrootParameter[2]である。
+		//SRVのDescriptorTableの先頭を設定。　2はrootParameter[2]である。
 		dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+
 
 		//ImGuiの内部コマンドを生成する
 		ImGui::Render();///////////
 		//描画
-		dxCommon->GetCommandList()->DrawInstanced(6, 1, 0, 0);
+		//dxCommon->GetCommandList()->DrawInstanced(6, 1, 0, 0);
 		//描画
 		dxCommon->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 
@@ -846,9 +836,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		////TransformationMatrixCBufferの場所を設定
 		dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
 
-		dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, materialResource->GetGPUVirtualAddress());
+		dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 		//描画
-		dxCommon->GetCommandList()->DrawInstanced(6, 1, 0, 0);
+		dxCommon->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
 		////実際のcomandListのImGuiの描画コマンドを挟む
 		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList());//////////
