@@ -36,6 +36,11 @@ struct VertexData {
 	Vector3 normal;
 };
 
+struct TransformationMatrix {
+	Matrix4x4 WVP;
+	Matrix4x4 World;
+};
+
 struct MaterialData {
 	std::string textureFilePath;
 };
@@ -610,17 +615,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//dxCommon->CreateDepthStencilTextureResource(depthStencilResource, &dsvdesc, dsvdescriptorheap->getcpudescriptorhandleforheapstart())
 
 	/*wvp用のリソースを作る。matarix4x41つ分にする*/
-	ComPtr<ID3D12Resource> wvpResource = dxCommon->CreateBufferResource(sizeof(Matrix4x4));
+	ComPtr<ID3D12Resource>wvpResource = dxCommon->CreateBufferResource(sizeof(TransformationMatrix));
 
 
 	//データを書き込む
-	Matrix4x4* wvpData = nullptr;
+	TransformationMatrix* wvpData = nullptr;
 
 	//書き込むためのアドレスを取得
 	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
 
 	//単位行列を書き込んでおく
-	*wvpData = MakeIdentity4x4();
+	wvpData->World = MakeIdentity4x4();
+	wvpData->WVP = MakeIdentity4x4();
 
 	//マテリアルにデータを読み込む
 	Vector4* materialData = nullptr;
@@ -793,7 +799,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, WinApp::kWindowWidth / WinApp::kWindowHeight, 0.1f, 100.0f);
 		// WVPMatrixを作る
 		Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
-		*wvpData = worldViewProjectionMatrix;
+		wvpData->World = worldViewProjectionMatrix;
+		wvpData->WVP = worldViewProjectionMatrix;
 
 		// sprite用のworldViewProjectionMatrixを作る
 		Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
@@ -819,7 +826,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 		//SRVのDescriptorTableの先頭を設定。　2はrootParameter[2]である。
 		dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
-
+		
 
 		//ImGuiの内部コマンドを生成する
 		ImGui::Render();///////////
@@ -833,6 +840,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		dxCommon->GetCommandList()->IASetIndexBuffer(&indexBufferViewSprite);
 
 		////TransformationMatrixCBufferの場所を設定
+		/*dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());*/
 		dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
 
 		dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
