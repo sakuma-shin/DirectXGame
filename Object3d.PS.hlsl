@@ -3,8 +3,8 @@
 
 
 ConstantBuffer<Material> gMaterial : register(b0);
-ConstantBuffer<Camera> gCamera : register(b2);
 ConstantBuffer<DirectionalLight>gDirectionalLight:register(b1);
+ConstantBuffer<Camera> gCamera : register(b2);
 //half lambert
 
 
