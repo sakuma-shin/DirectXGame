@@ -496,6 +496,7 @@ D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descrip
 Particle MakeNewParticle(std::mt19937& randomEngine) {
 	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
 	std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
+	std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
 
 	Particle particle;
 	particle.transform.scale = {1.0f, 1.0f, 1.0f};
@@ -503,6 +504,9 @@ Particle MakeNewParticle(std::mt19937& randomEngine) {
 	particle.transform.translate = {distribution(randomEngine), distribution(randomEngine), distribution(randomEngine)};
 	particle.velocity = {distribution(randomEngine), distribution(randomEngine), distribution(randomEngine)};
 	particle.color = {distColor(randomEngine), distColor(randomEngine), distColor(randomEngine), 1.0f};
+
+	particle.lifeTime = distTime(randomEngine);
+	particle.currentTime = 0;
 	return particle;
 }
 
@@ -812,11 +816,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	inputLayoutDesc.pInputElementDescs = inputElementDescs;
 	inputLayoutDesc.NumElements = _countof(inputElementDescs);
 
-	// BlendStateの設定
+
 	D3D12_BLEND_DESC blendDesc{};
 
-	// 全ての色要素を書き込む
 	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	blendDesc.RenderTarget[0].BlendEnable = TRUE;
+	blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
 
 	// RasiterzerStateの設定
 	D3D12_RASTERIZER_DESC rasterizerDesc{};
@@ -829,7 +839,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// Depthの機能を有効化する
 	depthStencilDesc.DepthEnable = true;
 	// 書き込みします
-	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
 	// 比較関数はLessEqual。つまり、近ければ描画される
 	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 
@@ -870,7 +880,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	assert(SUCCEEDED(hr));
 
 	// モデル読み込み
-	ModelData modelData = LoadObjFile("resources", "plane.obj");
+	ModelData modelData = LoadObjFile("Resources", "plane.obj");
 	// 頂点リソースを作る
 
 	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * modelData.vertices.size());
@@ -1104,15 +1114,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	std::random_device seeGenerator;
 	std::mt19937 randomEngine(seeGenerator());
-	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
+	/*std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);*/
 
-	std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
+	
 
 	for (uint32_t index = 0; index <kNumMaxInstance; ++index) {
 		// 一と速度を[-1,1]でランダムに初期化
 		particles[index] = MakeNewParticle(randomEngine);
-		particles[index].lifeTime = distTime(randomEngine);
-		particles[index].currentTime = 0;
 	}
 
 	MSG msg{};
@@ -1164,6 +1172,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				if (particles[index].lifeTime <= particles[index].currentTime) {
 					continue;
 				}
+
+				float alpha = 1.0f - (particles[index].currentTime / particles[index].lifeTime);
+			
 				Matrix4x4 worldMatrix = MakeAffineMatrix(particles[index].transform.scale, particles[index].transform.rotate, particles[index].transform.translate);
 				Matrix4x4 viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
 				Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, viewProjectionMatrix);
@@ -1173,7 +1184,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				instancingData[numInstance].WVP = worldViewProjectionMatrix;
 				instancingData[numInstance].World = worldMatrix;
 				instancingData[numInstance].color = particles[index].color;
-				float alpha = 1.0f - (particles[index].currentTime / particles[index].lifeTime);
+				
 				instancingData[numInstance].color.w = alpha;
 				
 				++numInstance;
