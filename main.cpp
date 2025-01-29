@@ -12,6 +12,7 @@
 #include <dxgidebug.h>
 #include <format>
 #include <fstream>
+#include <numbers>
 #include <random>
 #include <sstream>
 #include <string>
@@ -816,7 +817,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	inputLayoutDesc.pInputElementDescs = inputElementDescs;
 	inputLayoutDesc.NumElements = _countof(inputElementDescs);
 
-
 	D3D12_BLEND_DESC blendDesc{};
 
 	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
@@ -898,13 +898,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	const uint32_t kNumMaxInstance = 10; // インスタンス数
 	// Instacing用のTransformationMatrixを作る
-	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource = CreateBufferResource(device, sizeof(ParticleForGPU) *kNumMaxInstance);
+	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource = CreateBufferResource(device, sizeof(ParticleForGPU) * kNumMaxInstance);
 
 	ParticleForGPU* instancingData = nullptr;
 	instancingResource->Map(0, nullptr, reinterpret_cast<void**>(&instancingData));
 
 	// 単位行列を書き込んでおく
-	for (uint32_t index = 0; index <kNumMaxInstance; ++index) {
+	for (uint32_t index = 0; index < kNumMaxInstance; ++index) {
 		instancingData[index].WVP = MakeIdentity4x4();
 		instancingData[index].World = MakeIdentity4x4();
 	}
@@ -919,7 +919,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	instancingSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
 	instancingSrvDesc.Buffer.FirstElement = 0;
 	instancingSrvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-	instancingSrvDesc.Buffer.NumElements =kNumMaxInstance;
+	instancingSrvDesc.Buffer.NumElements = kNumMaxInstance;
 	instancingSrvDesc.Buffer.StructureByteStride = sizeof(ParticleForGPU);
 	D3D12_CPU_DESCRIPTOR_HANDLE instancingSrvHandleCPU = GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 3);
 	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU = GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 3);
@@ -1017,9 +1017,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
         {0.0f, 0.0f, 0.0f}
     };
 	Transform cameraTransform{
-	    {1.0f, 1.0f, 1.0f },
-        {0.0f, 0.0f, 0.0f },
-        {0.0f, 0.0f, -5.0f}
+	    {1.0f,	                         1.0f,	                  1.0f },
+        {std::numbers::pi_v<float> / 3.0f, std::numbers::pi_v<float>, 0.0f },
+        {0.0f,                             23.0f,                     10.0f}
     };
 	Transform transformSprite{
 	    {1.0f, 1.0f, 1.0f},
@@ -1116,12 +1116,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	std::mt19937 randomEngine(seeGenerator());
 	/*std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);*/
 
-	
-
-	for (uint32_t index = 0; index <kNumMaxInstance; ++index) {
+	for (uint32_t index = 0; index < kNumMaxInstance; ++index) {
 		// 一と速度を[-1,1]でランダムに初期化
 		particles[index] = MakeNewParticle(randomEngine);
 	}
+
+	bool useBillBoard = false;
+	
 
 	MSG msg{};
 	// ウインドウの×ボタンが押されるまでループ
@@ -1147,6 +1148,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::DragFloat3("spriteTranslate", &transformSprite.translate.x, 0.01f);
 			ImGui::DragFloat3("spriteScale", &transformSprite.scale.x, 0.01f);
 			ImGui::DragFloat3("spriteRotate", &transformSprite.rotate.x, 0.01f);
+			ImGui::Checkbox("useBillBoared", &useBillBoard);
 			ImGui::End();
 
 			/*transform.rotate.y += 0.03f;*/
@@ -1167,15 +1169,29 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			*transformationMatrixDataSprite = worldViewProjectionMatrixSprite;
 
-				uint32_t numInstance = 0;
-			for (uint32_t index = 0; index <kNumMaxInstance; ++index) {
+			Matrix4x4 backToFrontMatrix = MakeRotateYMatrix(std::numbers::pi_v<float>);
+
+			Matrix4x4 billboardMatrix = Multiply(backToFrontMatrix, cameraMatrix);
+
+			billboardMatrix.m[3][0] = 0.0f;
+			billboardMatrix.m[3][1] = 0.0f;
+			billboardMatrix.m[3][2] = 0.0f;
+
+			Matrix4x4 scaleMatrix;
+			Matrix4x4 translateMatrix;
+
+			
+
+			uint32_t numInstance = 0;
+			for (uint32_t index = 0; index < kNumMaxInstance; ++index) {
 				if (particles[index].lifeTime <= particles[index].currentTime) {
 					continue;
 				}
 
 				float alpha = 1.0f - (particles[index].currentTime / particles[index].lifeTime);
-			
-				Matrix4x4 worldMatrix = MakeAffineMatrix(particles[index].transform.scale, particles[index].transform.rotate, particles[index].transform.translate);
+
+				/*Matrix4x4 worldMatrix = MakeAffineMatrix(particles[index].transform.scale, particles[index].transform.rotate, particles[index].transform.translate);*/
+				Matrix4x4 worldMatrix = scaleMatrix * billboardMatrix * translateMatrix;
 				Matrix4x4 viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
 				Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, viewProjectionMatrix);
 
@@ -1184,10 +1200,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				instancingData[numInstance].WVP = worldViewProjectionMatrix;
 				instancingData[numInstance].World = worldMatrix;
 				instancingData[numInstance].color = particles[index].color;
-				
+
 				instancingData[numInstance].color.w = alpha;
-				
+
 				++numInstance;
+
+				scaleMatrix = MakeScaleMatrix(particles[index].transform.scale);
+				translateMatrix = MakeTraslateMatrix(particles[index].transform.translate);
+
+				if (useBillBoard == false) {
+
+					billboardMatrix = MakeIdentity4x4();
+				}
 
 				/*particles[index].velocity = {0.0f, 1.0f, 0.0f};*/
 			}
@@ -1243,7 +1267,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// 描画
 			// commandList->DrawInstanced(6, 1, 0, 0);
 
-		/*	UINT instanceCount = 10;*/
+			/*	UINT instanceCount = 10;*/
 			// 描画
 			commandList->DrawInstanced(UINT(modelData.vertices.size()), numInstance, 0, 0);
 
