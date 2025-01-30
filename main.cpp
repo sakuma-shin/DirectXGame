@@ -820,10 +820,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// DepthStencilの設定
 
 	// Shaderをコンパイルする
-	IDxcBlob* vertexShaderBlob = CompileShader(L"Object3D.VS.hlsl", L"vs_6_0", dxcUtils, dxcCompiler, includeHandler);
+	IDxcBlob* vertexShaderBlob = CompileShader(L"Object3d.VS.hlsl", L"vs_6_0", dxcUtils, dxcCompiler, includeHandler);
 	assert(vertexShaderBlob != nullptr);
 
-	IDxcBlob* pixelShaderBlob = CompileShader(L"Object3D.PS.hlsl", L"ps_6_0", dxcUtils, dxcCompiler, includeHandler);
+	IDxcBlob* pixelShaderBlob = CompileShader(L"Object3d.PS.hlsl", L"ps_6_0", dxcUtils, dxcCompiler, includeHandler);
 	assert(pixelShaderBlob != nullptr);
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
@@ -885,7 +885,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	materialDataSprite->enableLighting = true;
 	materialDataSprite->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	materialDataSprite->enableLighting = true;
-	materialDataSprite->shininess = 100;
+	materialDataSprite->shininess = 70;
 
 
 	// DSVHeapの先頭にDSVを作る
@@ -926,7 +926,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 今回は赤を書き込んでみる
 	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	materialData->enableLighting = true;
-	materialData->shininess = 100;
+	materialData->shininess = 70;
 
 	ID3D12Resource* directionalLightResource = CreateBufferResource(device, sizeof(DirectionalLight));
 
@@ -934,7 +934,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
 	directionalLightData->color = {1.0f, 1.0f, 1.0f, 1.0f};
-	directionalLightData->direction = {0.0f, 0.0f, 1.0f};
+	directionalLightData->direction = {0.0f, -1.0f, 0.0f};
 	directionalLightData->intensity = 1.0f;
 	
 	// 頂点バッファビューを作成する
@@ -1034,6 +1034,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			vertexData[start].position.w = 1.0f;
 			vertexData[start].texcoord.x = float(lonIndex) / float(kSubdivision);
 			vertexData[start].texcoord.y = 1.0f-float(latIndex) / float(kSubdivision);
+			vertexData[start].normal.x = vertexData[start].position.x;
+			vertexData[start].normal.y = vertexData[start].position.y;
+			vertexData[start].normal.z = vertexData[start].position.z;
 			//b
 			vertexData[start + 1].position.x = cos(lat + kLatEvery)*cos(lon);
 			vertexData[start + 1].position.y = sin(lat + kLatEvery);
@@ -1041,6 +1044,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			vertexData[start + 1].position.w= 1.0f;
 			vertexData[start + 1].texcoord.x = float(lonIndex) / float(kSubdivision);
 			vertexData[start + 1].texcoord.y= 1.0f-float(latIndex + 1) / float(kSubdivision);
+			vertexData[start + 1].normal.x = vertexData[start + 1].position.x;
+			vertexData[start + 1].normal.y = vertexData[start + 1].position.y;
+			vertexData[start + 1].normal.z = vertexData[start + 1].position.z;
 			// c
 			vertexData[start + 2].position.x = cos(lat)*cos(lon + kLonEvery);
 			vertexData[start + 2].position.y = sin(lat);
@@ -1048,6 +1054,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			vertexData[start + 2].position.w = 1.0f;
 			vertexData[start + 2].texcoord.x = float(lonIndex + 1) / float(kSubdivision);
 			vertexData[start + 2].texcoord.y = 1.0f - float(latIndex) / float(kSubdivision);
+			vertexData[start + 2].normal.x = vertexData[start + 2].position.x;
+			vertexData[start + 2].normal.y = vertexData[start + 2].position.y;
+			vertexData[start + 2].normal.z = vertexData[start + 2].position.z;
 
 			vertexData[start + 3] = vertexData[start + 2];
 			//b
@@ -1059,6 +1068,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			vertexData[start + 5].position.w = 1.0f;
 			vertexData[start + 5].texcoord.x = float(lonIndex + 1) / float(kSubdivision);
 			vertexData[start + 5].texcoord.y=1.0f-float(latIndex + 1) / float(kSubdivision);
+			vertexData[start + 5].normal.x = vertexData[start + 5].position.x;
+			vertexData[start + 5].normal.y = vertexData[start + 5].position.y;
+			vertexData[start + 5].normal.z = vertexData[start + 5].position.z;
 		}
 	}
 
@@ -1154,16 +1166,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// ImGui::ShowDemoWindow();
 
 			ImGui::Begin("Window");
-			/*ImGui::DragFloat3("color", &materialData->x, 0.01f);*/
+			ImGui::DragFloat3("color", &materialData->color.x, 0.01f);
 			ImGui::DragFloat3("modelScale", &transform.scale.x, 0.01f);
 			ImGui::DragFloat3("modelRotate", &transform.rotate.x, 0.01f);
 			ImGui::DragFloat3("modelTranslate", &transform.translate.x, 0.01f);
 			ImGui::DragFloat3("spriteTranslate", &transformSprite.translate.x, 0.01f);
 			ImGui::DragFloat3("spriteScale", &transformSprite.scale.x, 0.01f);
 			ImGui::DragFloat3("spriteRotate", &transformSprite.rotate.x, 0.01f);
+			ImGui::DragFloat3("light",&directionalLightData->direction.x, 0.01f);
+			/*ImGui::DragFloat3("LightTranslate", &cameraTransform.translate.x, 0.01f);
+			ImGui::DragFloat3("LightScale", &cameraTransform.scale.x, 0.01f);
+			ImGui::DragFloat3("LightRotate", &cameraTransform.rotate.x, 0.01f);*/
 			ImGui::End();
 
 			cameraData->worldPosition = cameraTransform.translate;
+
 
 			/*transform.rotate.y += 0.03f;*/
 			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
@@ -1225,15 +1242,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 			// wvp用のCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(3, cameraResource->GetGPUVirtualAddress());
 
-			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(4, directionalLightResource->GetGPUVirtualAddress());
 
 			// SRVのDescriptorTableの先頭を設定。　2はrootParameter[2]である。
 			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 
-			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
+//			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
 
-			commandList->SetGraphicsRootConstantBufferView(4, cameraResource->GetGPUVirtualAddress());
 
 			// ImGuiの内部コマンドを生成する
 			ImGui::Render(); ///////////
@@ -1241,7 +1258,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->DrawInstanced(6, 1, 0, 0);
 			commandList->DrawInstanced(kVertexCount, kNumInstance, 0, 0);
 			// 描画
-			commandList->DrawInstanced(kVertexCount, kNumInstance, 0, 0);
+			//commandList->DrawInstanced(kVertexCount, kNumInstance, 0, 0);
 
 			// Spriteの描画
 

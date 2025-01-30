@@ -1,10 +1,9 @@
-#include"Vector4.h"
 #include"Object3d.hlsli"
 
 
 ConstantBuffer<Material> gMaterial : register(b0);
-ConstantBuffer<DirectionalLight>gDirectionalLight:register(b1);
-ConstantBuffer<Camera> gCamera : register(b2);
+ConstantBuffer<Camera> gCamera : register(b1); //[3]
+ConstantBuffer<DirectionalLight>gDirectionalLight:register(b2);  //[4]
 //half lambert
 
 
@@ -22,7 +21,7 @@ PixelShaderOutput main(VertexShaderOutput input)
     float32_t3 toEye = normalize(gCamera.worldPosition - input.worldPosition);
     
     float32_t4 textureColor = gTexture.Sample(gSampler, input.texcoord);
-    float32_t3 reflectLight = reflect(gDirectionalLight.direction, normalize(input.normal));
+    float32_t3 reflectLight = reflect(normalize(gDirectionalLight.direction), normalize(input.normal));
     
     
     PixelShaderOutput output;
@@ -42,11 +41,11 @@ PixelShaderOutput main(VertexShaderOutput input)
         float32_t3 specular = gDirectionalLight.color.rgb * gDirectionalLight.intensity * specularPow * float32_t3(1.0f, 1.0f, 1.0f);
     
         output.color.rgb = diffuse + specular;
-    //output.color = gMaterial.color.textureColor;
+        //output.color = gMaterial.color.textureColor;
         //output.color.a = gMaterial.color.a * textureColor.a;
         
         //float cos = saturate(dot(normalize(input.normal), -gDirectionalLight.direction));
-        output.color = gMaterial.color * textureColor * gDirectionalLight.color * cos * gDirectionalLight.intensity;
+        //output.color = gMaterial.color * textureColor * gDirectionalLight.color * cos * gDirectionalLight.intensity;
       
     }
     else

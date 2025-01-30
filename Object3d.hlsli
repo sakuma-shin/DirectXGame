@@ -24,7 +24,7 @@ struct Material
     float32_t4 color;
     float32_t4x4 uvTransform;
     int32_t enableLighting;
-    float32_t padding[3];
+    float32_t3 padding;
     float32_t shininess;
     
 };
