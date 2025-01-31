@@ -501,27 +501,30 @@ D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descrip
 	return handleGPU;
 }
 
-Particle MakeNewParticle(std::mt19937& randomEngine) {
+Particle MakeNewParticle(std::mt19937& randomEngine,const Vector3 &translate) {
 	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
 	std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
 	std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
 
+	Vector3 randomTranslate{distribution(randomEngine), distribution(randomEngine), distribution(randomEngine)};
+
 	Particle particle;
 	particle.transform.scale = {1.0f, 1.0f, 1.0f};
 	particle.transform.rotate = {0.0f, 3.14f, 0.0f};
-	particle.transform.translate = {distribution(randomEngine), distribution(randomEngine), distribution(randomEngine)};
+	particle.transform.translate = translate + randomTranslate;
 	particle.velocity = {distribution(randomEngine), distribution(randomEngine), distribution(randomEngine)};
 	particle.color = {distColor(randomEngine), distColor(randomEngine), distColor(randomEngine), 1.0f};
 
 	particle.lifeTime = distTime(randomEngine);
 	particle.currentTime = 0;
+
 	return particle;
 }
 
 std::list<Particle> Emit(const Emitter& emitter, std::mt19937& randomEngine) { 
 	std::list<Particle> particles;
 	for (uint32_t count = 0; count < emitter.count; ++count) {
-		particles.push_back(MakeNewParticle(randomEngine));
+		particles.push_back(MakeNewParticle(randomEngine,emitter.transform.translate));
 	}
 	return particles;
 }
@@ -911,7 +914,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// wvp用のリソースを作る。Matarix4x41つ分にする
 	ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(Matrix4x4));
 
-	const uint32_t kNumMaxInstance = 10; // インスタンス数
+	const uint32_t kNumMaxInstance = 100;
+	// インスタンス数
 	// Instacing用のTransformationMatrixを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource = CreateBufferResource(device, sizeof(ParticleForGPU) * kNumMaxInstance);
 
@@ -1060,6 +1064,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	emitter.frequency = 0.5f;
 	emitter.frequencyTime = 0.0f;
 
+	emitter.transform.translate = {0.0f, 0.0f, 0.0f};
+	emitter.transform.rotate = {0.0f, 0.0f, 0.0f};
+	emitter.transform.scale = {1.0f, 1.0f, 1.0f};
+
 	std::list<Particle> particles;
 	for (std::list<Particle>::iterator particleIterator = particles.begin(); 
 		particleIterator != particles.end();++particleIterator
@@ -1115,7 +1123,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//*transformationMatrixData = MakeIdentity4x4();
 
 	// Textureを読んで転送する
-	DirectX::ScratchImage mipImages = LoadTexture("Resources/uvChecker.png");
+	DirectX::ScratchImage mipImages = LoadTexture("Resources/circle.png");
 	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
 	ID3D12Resource* textureResource = CreateTextureResource(device, metadata);
 	UpLoadTextureData(textureResource, mipImages);
@@ -1140,9 +1148,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	/*std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);*/
 
 
-	particles.push_back(MakeNewParticle(randomEngine));
-	particles.push_back(MakeNewParticle(randomEngine));
-	particles.push_back(MakeNewParticle(randomEngine));
+	particles.push_back(MakeNewParticle(randomEngine,emitter.transform.translate));
+	particles.push_back(MakeNewParticle(randomEngine, emitter.transform.translate));
+	particles.push_back(MakeNewParticle(randomEngine, emitter.transform.translate));
 	for (uint32_t index = 0; index < kNumMaxInstance; ++index) {
 		// 一と速度を[-1,1]でランダムに初期化
 		
@@ -1180,11 +1188,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				particles.splice(particles.end(), Emit(emitter, randomEngine));
 				particles.splice(particles.end(), Emit(emitter, randomEngine));
 			}
+			ImGui::DragFloat3("EmitterTranslate", &emitter.transform.translate.x, 0.01f, -100.0f, 100.0f);
 			ImGui::End();
 
 			emitter.frequencyTime += kDeltaTime;
 			if (emitter.frequency <= emitter.frequencyTime) {
 				particles.splice(particles.end(), Emit(emitter, randomEngine));
+
 				emitter.frequencyTime -= emitter.frequency;
 			}
 
@@ -1220,25 +1230,29 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			uint32_t numInstance = 0;
 			for (std::list<Particle>::iterator particleIterator = particles.begin(); particleIterator != particles.end(); ) {
 				if (particleIterator->lifeTime <= particleIterator->currentTime) {
+					particleIterator = particles.erase(particleIterator);
 					continue;
 				}
 
-				float alpha = 1.0f - (particleIterator->currentTime / particleIterator->lifeTime);
+				if (numInstance < kNumMaxInstance) {
 
-				/*Matrix4x4 worldMatrix = MakeAffineMatrix(particles[index].transform.scale, particles[index].transform.rotate, particles[index].transform.translate);*/
-				Matrix4x4 worldMatrix = scaleMatrix * billboardMatrix * translateMatrix;
-				Matrix4x4 viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
-				Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, viewProjectionMatrix);
+					float alpha = 1.0f - (particleIterator->currentTime / particleIterator->lifeTime);
 
-				particleIterator->transform.translate += particleIterator->velocity * kDeltaTime;
-				particleIterator->currentTime += kDeltaTime;
-				instancingData[numInstance].WVP = worldViewProjectionMatrix;
-				instancingData[numInstance].World = worldMatrix;
-				instancingData[numInstance].color = particleIterator->color;
+					/*Matrix4x4 worldMatrix = MakeAffineMatrix(particles[index].transform.scale, particles[index].transform.rotate, particles[index].transform.translate);*/
+					Matrix4x4 worldMatrix = scaleMatrix * billboardMatrix * translateMatrix;
+					Matrix4x4 viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
+					Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, viewProjectionMatrix);
 
-				instancingData[numInstance].color.w = alpha;
+					particleIterator->transform.translate += particleIterator->velocity * kDeltaTime;
+					particleIterator->currentTime += kDeltaTime;
+					instancingData[numInstance].WVP = worldViewProjectionMatrix;
+					instancingData[numInstance].World = worldMatrix;
+					instancingData[numInstance].color = particleIterator->color;
 
-				++numInstance;
+					instancingData[numInstance].color.w = alpha;
+
+					++numInstance;
+				}
 
 				scaleMatrix = MakeScaleMatrix(particleIterator->transform.scale);
 				translateMatrix = MakeTraslateMatrix(particleIterator->transform.translate);
@@ -1314,7 +1328,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->IASetIndexBuffer(&indexBufferViewSprite);
 
 			// TransformationMatrixCBufferの場所を設定
-			// commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
+			 /*commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());*/
 			// 描画
 			// commandList->DrawIndexedInstanced(6, 1, 0, 0,0);
 
