@@ -78,6 +78,11 @@ struct Emitter {
 	float frequencyTime;
 };
 
+struct AccelerationField {
+	Vector3 acceleration;
+	AABB area;
+};
+
 // ウインドウプロシーシャ
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
@@ -501,7 +506,7 @@ D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descrip
 	return handleGPU;
 }
 
-Particle MakeNewParticle(std::mt19937& randomEngine,const Vector3 &translate) {
+Particle MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate) {
 	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
 	std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
 	std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
@@ -521,10 +526,10 @@ Particle MakeNewParticle(std::mt19937& randomEngine,const Vector3 &translate) {
 	return particle;
 }
 
-std::list<Particle> Emit(const Emitter& emitter, std::mt19937& randomEngine) { 
+std::list<Particle> Emit(const Emitter& emitter, std::mt19937& randomEngine) {
 	std::list<Particle> particles;
 	for (uint32_t count = 0; count < emitter.count; ++count) {
-		particles.push_back(MakeNewParticle(randomEngine,emitter.transform.translate));
+		particles.push_back(MakeNewParticle(randomEngine, emitter.transform.translate));
 	}
 	return particles;
 }
@@ -1068,14 +1073,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	emitter.transform.rotate = {0.0f, 0.0f, 0.0f};
 	emitter.transform.scale = {1.0f, 1.0f, 1.0f};
 
+	AccelerationField accelerationField;
+	accelerationField.acceleration = {15.0f, 0.0f, 0.0f};
+	accelerationField.area.min = {-1.0f, -1.0f, -1.0f};
+	accelerationField.area.max = {1.0f, 1.0f, 1.0f};
+
 	std::list<Particle> particles;
-	for (std::list<Particle>::iterator particleIterator = particles.begin(); 
-		particleIterator != particles.end();++particleIterator
-		) {
+	for (std::list<Particle>::iterator particleIterator = particles.begin(); particleIterator != particles.end(); ++particleIterator) {
 
 		particleIterator->transform.scale = {1.0f, 1.0f, 1.0f};
 		particleIterator->transform.rotate = {0.0f, 3.14f, 0.0f};
-		particleIterator->transform.translate = {0.1f,0.1f, 0.1f};
+		particleIterator->transform.translate = {0.1f, 0.1f, 0.1f};
 	}
 
 	// ビューポート
@@ -1147,16 +1155,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	std::mt19937 randomEngine(seeGenerator());
 	/*std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);*/
 
-
-	particles.push_back(MakeNewParticle(randomEngine,emitter.transform.translate));
+	particles.push_back(MakeNewParticle(randomEngine, emitter.transform.translate));
 	particles.push_back(MakeNewParticle(randomEngine, emitter.transform.translate));
 	particles.push_back(MakeNewParticle(randomEngine, emitter.transform.translate));
 	for (uint32_t index = 0; index < kNumMaxInstance; ++index) {
 		// 一と速度を[-1,1]でランダムに初期化
-		
 	}
 
 	bool useBillBoard = false;
+	bool useWind = false;
 
 	MSG msg{};
 	// ウインドウの×ボタンが押されるまでループ
@@ -1183,7 +1190,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::DragFloat3("spriteScale", &transformSprite.scale.x, 0.01f);
 			ImGui::DragFloat3("spriteRotate", &transformSprite.rotate.x, 0.01f);
 			ImGui::Checkbox("useBillBoared", &useBillBoard);
-			if(ImGui::Button("Add Particle")) {
+			ImGui::Checkbox("useWind", &useWind);
+			if (ImGui::Button("Add Particle")) {
 				particles.splice(particles.end(), Emit(emitter, randomEngine));
 				particles.splice(particles.end(), Emit(emitter, randomEngine));
 				particles.splice(particles.end(), Emit(emitter, randomEngine));
@@ -1228,11 +1236,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			Matrix4x4 translateMatrix;
 
 			uint32_t numInstance = 0;
-			for (std::list<Particle>::iterator particleIterator = particles.begin(); particleIterator != particles.end(); ) {
+			for (std::list<Particle>::iterator particleIterator = particles.begin(); particleIterator != particles.end();) {
 				if (particleIterator->lifeTime <= particleIterator->currentTime) {
 					particleIterator = particles.erase(particleIterator);
 					continue;
 				}
+
+				// Fieldの範囲内のParticleに加速を適用
 
 				if (numInstance < kNumMaxInstance) {
 
@@ -1242,6 +1252,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					Matrix4x4 worldMatrix = scaleMatrix * billboardMatrix * translateMatrix;
 					Matrix4x4 viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
 					Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, viewProjectionMatrix);
+
+					if (useWind) {
+						if (IsCollision(accelerationField.area, particleIterator->transform.translate)) {
+							particleIterator->velocity += accelerationField.acceleration * kDeltaTime;
+						}
+					}
 
 					particleIterator->transform.translate += particleIterator->velocity * kDeltaTime;
 					particleIterator->currentTime += kDeltaTime;
@@ -1328,7 +1344,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->IASetIndexBuffer(&indexBufferViewSprite);
 
 			// TransformationMatrixCBufferの場所を設定
-			 /*commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());*/
+			/*commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());*/
 			// 描画
 			// commandList->DrawIndexedInstanced(6, 1, 0, 0,0);
 

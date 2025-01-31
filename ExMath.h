@@ -10,6 +10,11 @@ struct Sphere {
 	float radius;
 };
 
+struct AABB {
+	Vector3 min; // 最小点
+	Vector3 max; // 最小点
+};
+
 //加算
 Vector3 Add(const Vector3& v1, const Vector3& v2);
 
@@ -102,3 +107,5 @@ Matrix4x4 operator*(const Matrix4x4& m1, const Matrix4x4& m2);
 
 Vector3 operator-(const Vector3& v);
 Vector3 operator+(const Vector3& v);
+
+bool IsCollision(const AABB& aabb, const Vector3& point);

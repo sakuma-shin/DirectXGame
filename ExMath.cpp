@@ -528,3 +528,12 @@ Matrix4x4 operator*(const Matrix4x4& m1, const Matrix4x4& m2) { return Multiply(
 Vector3 operator-(const Vector3& v) { return{ -v.x,-v.y,-v.z }; }
 Vector3 operator+(const Vector3& v) { return v; }
 
+bool IsCollision(const AABB& aabb, const Vector3& point) { 
+ if ((point.x >= aabb.min.x && point.x <= aabb.max.x)&&
+	 (point.y >= aabb.min.y && point.y <= aabb.max.y) && 
+	 (point.z >= aabb.min.z && point.z <= aabb.max.z)) {
+		return true;
+ }
+ return false;
+}
+
