@@ -1043,9 +1043,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	for (std::list<Particle>::iterator particleIterator = particles.begin(); particleIterator != particles.end();++particleIterator){
 		{
 
-		particles.transform.scale = {1.0f, 1.0f, 1.0f};
-		particles.transform.rotate = {0.0f, 3.14f, 0.0f};
-		particles.transform.translate = {index * 0.1f, index * 0.1f, index * 0.1f};
+		particleIterator->transform.scale = {1.0f, 1.0f, 1.0f};
+		particleIterator->transform.rotate = {0.0f, 3.14f, 0.0f};
+		particleIterator->transform.translate = {particleIterator * 0.1f, index * 0.1f, index * 0.1f};
 	}
 
 	// ビューポート
