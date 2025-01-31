@@ -1039,13 +1039,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	const float kDeltaTime = 1.0f / 60.0f;
 
-	std::list<Particle> particles;
-	for (std::list<Particle>::iterator particleIterator = particles.begin(); particleIterator != particles.end();++particleIterator){
-		{
+	Particle particles[kNumMaxInstance];
+	for (uint32_t index = 0; index < kNumMaxInstance; ++index) {
 
-		particleIterator->transform.scale = {1.0f, 1.0f, 1.0f};
-		particleIterator->transform.rotate = {0.0f, 3.14f, 0.0f};
-		particleIterator->transform.translate = {particleIterator * 0.1f, index * 0.1f, index * 0.1f};
+		particles[index].transform.scale = {1.0f, 1.0f, 1.0f};
+		particles[index].transform.rotate = {0.0f, 3.14f, 0.0f};
+		particles[index].transform.translate = {index * 0.1f, index * 0.1f, index * 0.1f};
 	}
 
 	// ビューポート
@@ -1123,7 +1122,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	}
 
 	bool useBillBoard = false;
-	
 
 	MSG msg{};
 	// ウインドウの×ボタンが押されるまでループ
@@ -1180,8 +1178,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			Matrix4x4 scaleMatrix;
 			Matrix4x4 translateMatrix;
-
-			
 
 			uint32_t numInstance = 0;
 			for (uint32_t index = 0; index < kNumMaxInstance; ++index) {
