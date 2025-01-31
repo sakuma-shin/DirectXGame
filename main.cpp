@@ -1039,12 +1039,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	const float kDeltaTime = 1.0f / 60.0f;
 
-	Particle particles[kNumMaxInstance];
-	for (uint32_t index = 0; index < kNumMaxInstance; ++index) {
+	std::list<Particle> particles;
+	for (std::list<Particle>::iterator particleIterator = particles.begin(); particleIterator != particles.end();++particleIterator){
+		{
 
-		particles[index].transform.scale = {1.0f, 1.0f, 1.0f};
-		particles[index].transform.rotate = {0.0f, 3.14f, 0.0f};
-		particles[index].transform.translate = {index * 0.1f, index * 0.1f, index * 0.1f};
+		particles.transform.scale = {1.0f, 1.0f, 1.0f};
+		particles.transform.rotate = {0.0f, 3.14f, 0.0f};
+		particles.transform.translate = {index * 0.1f, index * 0.1f, index * 0.1f};
 	}
 
 	// ビューポート
