@@ -16,6 +16,8 @@
 // DirectX基盤
 class DirectXCommon {
 public:
+
+	~DirectXCommon();
 	void Initialize(WinApp* winapp);
 
 	void DeviceInitialize();
@@ -68,7 +70,7 @@ public:
 	ID3D12Device* GetDevice() const { return device.Get(); }
 	ID3D12GraphicsCommandList* GetCommandList() const { return commandList_.Get(); }
 
-	Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(const std::wstring& filePath, const wchar_t* profile);
+	IDxcBlob* CompileShader(const std::wstring& filePath, const wchar_t* profile);
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeinBytes);
 
@@ -138,6 +140,8 @@ private:
 	uint64_t fenceValue = 0;
 
 	HANDLE fenceEvent;
+
+	Microsoft::WRL::ComPtr<ID3D12Debug1> debugController = nullptr;
 
 	void InitializeFixFPS();
 
