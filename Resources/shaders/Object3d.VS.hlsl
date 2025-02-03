@@ -2,7 +2,7 @@
 
 struct TransformationMatrix
 {
-    float4 WVP;
+    float4x4 WVP;
 };
 ConstantBuffer<TransformationMatrix> gTransformationMatrix : register(b0);
 
