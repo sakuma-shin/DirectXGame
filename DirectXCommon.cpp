@@ -6,7 +6,14 @@
 
 using namespace Microsoft::WRL;
 
-DirectXCommon::~DirectXCommon() { CloseHandle(fenceEvent); }
+DirectXCommon::~DirectXCommon() { 
+	CloseHandle(fenceEvent);
+
+// ImGuiの終了処理
+	ImGui_ImplDX12_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
+}
 
 void DirectXCommon::Initialize(WinApp* winApp) {
 	// NULL検出

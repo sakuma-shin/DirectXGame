@@ -891,14 +891,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//		errorBlob->Release();
 	//	}
 	/*	rootSignature->Release();*/
-		pixelShaderBlob->Release();
-		vertexShaderBlob->Release();
+		/*pixelShaderBlob->Release();
+		vertexShaderBlob->Release();*/
 	//	materialResource->Release();
 	//
-		//ImGuiの終了処理
-		ImGui_ImplDX12_Shutdown();
-		ImGui_ImplWin32_Shutdown();
-		ImGui::DestroyContext();
+		
 	// #ifdef _DEBUG
 	//	debugController->Release();
 	// #endif
