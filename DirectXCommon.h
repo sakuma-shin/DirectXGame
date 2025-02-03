@@ -1,21 +1,19 @@
 #pragma once
-#include<d3d12.h>
-#include<dxgi1_6.h>
-#include<wrl.h>
-#include"externals/imgui/imgui.h"
-#include"externals/imgui/imgui_impl_dx12.h"
-#include"externals/imgui/imgui_impl_win32.h"
-#include"WinApp.h"
-#include"Logger.h"
-#include<array>
-#include <format>
+#include "Logger.h"
+#include "StringUtility.h"
+#include "WinApp.h"
+#include "externals/imgui/imgui.h"
+#include "externals/imgui/imgui_impl_dx12.h"
+#include "externals/imgui/imgui_impl_win32.h"
+#include <array>
+#include <d3d12.h>
 #include <dxcapi.h>
-#include"StringUtility.h"
+#include <dxgi1_6.h>
+#include <format>
+#include <wrl.h>
+#include<chrono>
 
-
-
-
-//DirectX基盤
+// DirectX基盤
 class DirectXCommon {
 public:
 	void Initialize(WinApp* winapp);
@@ -59,12 +57,12 @@ public:
 	/// </summary>
 	D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index);
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource( int32_t width, int32_t height);
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(int32_t width, int32_t height);
 
-	//描画前処理
+	// 描画前処理
 	void PreDraw();
 
-	//描画後処理
+	// 描画後処理
 	void PostDraw();
 
 	ID3D12Device* GetDevice() const { return device.Get(); }
@@ -83,14 +81,12 @@ public:
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> GetSrvDescriptorHeap() const { return srvDescriptorHeap_; }
 
 private:
-	
-
-	//DirectX12デバイス
+	// DirectX12デバイス
 	Microsoft::WRL::ComPtr<ID3D12Device> device;
 
 	Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory;
 
-	//windowsAPI
+	// windowsAPI
 	WinApp* winApp_ = nullptr;
 
 	Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain_ = nullptr;
@@ -111,13 +107,13 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap_;
 
-	std::array<Microsoft::WRL::ComPtr<ID3D12Resource>, 2>swapChainResources;
+	std::array<Microsoft::WRL::ComPtr<ID3D12Resource>, 2> swapChainResources;
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
 
 	Microsoft::WRL::ComPtr<ID3D12Fence> fence = nullptr;
 
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc_{};
-	//RTVの設定
+	// RTVの設定
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc_{};
 
 	Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils;
@@ -142,4 +138,10 @@ private:
 	uint64_t fenceValue = 0;
 
 	HANDLE fenceEvent;
+
+	void InitializeFixFPS();
+
+	void UpdateFixFPS();
+
+	std::chrono::steady_clock::time_point reference_;
 };

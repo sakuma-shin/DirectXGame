@@ -2,6 +2,7 @@
 #include <cassert>
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
+#include <thread>
 
 using namespace Microsoft::WRL;
 
@@ -11,6 +12,9 @@ void DirectXCommon::Initialize(WinApp* winApp) {
 
 	// メンバ関数に記録
 	winApp_ = winApp;
+
+	//FPS固定初期化
+	InitializeFixFPS();
 
 	DeviceInitialize();
 	CommandInitialize();
@@ -408,6 +412,9 @@ void DirectXCommon::PostDraw() {
 	// GPUがここまでたどり着いたときに、Fenceの値を指定した値に代入するようにSignalを送る
 	commandQueue_->Signal(fence.Get(), fenceValue);
 
+	//FPS固定
+	UpdateFixFPS();
+
 	// Fenceの値が指定したSignal値にたどり着いているか確認する
 	// GetCompletedValueの初期値はFence作成時に渡した初期値
 	if (fence->GetCompletedValue() < fenceValue) {
@@ -563,4 +570,32 @@ DirectX::ScratchImage DirectXCommon::LoadTexture(const std::string& filePath) {
 
 	// ミップマップ付きのデータを消す
 	return mipImages;
+}
+
+void DirectXCommon::InitializeFixFPS() {
+//現在時間を記録する
+	reference_ = std::chrono::steady_clock::now();
+}
+
+void DirectXCommon::UpdateFixFPS() {
+	//1/60秒ぴったりの時間
+	const std::chrono::microseconds kMinTime(uint64_t(1000000.0f / 60.0f));
+	// 1/60秒より僅かに短い時間時間
+	const std::chrono::microseconds kMinCheckTime(uint64_t(1000000.0f / 65.0f));
+
+	//現在時間を取得する
+	std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+	//前回記録からの経過時間を取得する
+	std::chrono::microseconds elapsed = std::chrono::duration_cast<std::chrono::microseconds>(now - reference_);
+
+	//// 1/60秒より僅かに短い時間経っていない場合
+	if (elapsed < kMinCheckTime) {
+		// 1/60秒経過するまで微小なスリープを繰り返す
+		while (std::chrono::steady_clock::now() - reference_ < kMinTime) {
+		//1マイクロ秒スリープ
+			std::this_thread::sleep_for(std::chrono::microseconds(1));
+		}
+	}
+
+	reference_ = std::chrono::steady_clock::now();
 }
